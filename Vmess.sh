@@ -50,9 +50,9 @@ colorEcho() {
     echo -e "${1}${@:2}${PLAIN}"
 }
 
-configyes() {
-    local ws=`grep wsSettings $CONFIG_FILE`
-    if [[ -z "$ws" ]]; then
+config() {
+    local conf=`grep wsSettings $CONFIG_FILE`
+    if [[ -z "$conf" ]]; then
         echo no
         return
     fi
@@ -73,6 +73,10 @@ status() {
     if [[ -z "$res" ]]; then
         echo 2
         return
+    fi
+    
+    if [[ `config` != "yes" ]]; then
+        echo 3
     fi
 }
 
