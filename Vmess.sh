@@ -13,6 +13,13 @@ PLAIN='\033[0m'
 CONFIG_FILE="/usr/local/etc/xray/config.json"
 OS=`hostnamectl | grep -i system | cut -d: -f2`
 
+V6_PROXY=""
+IP=`curl -sL -4 ip.sb`
+if [[ "$?" != "0" ]]; then
+    IP=`curl -sL -6 ip.sb`
+    V6_PROXY="https://gh.slotheve.com/"
+fi
+
 checkSystem() {
     result=$(id | awk '{print $1}')
     if [[ $result != "uid=0(root)" ]]; then
@@ -104,7 +111,7 @@ getVersion() {
     VER=`/usr/local/bin/xray version|head -n1 | awk '{print $2}'`
     RETVAL=$?
     CUR_VER="$(normalizeVersion "$(echo "$VER" | head -n 1 | cut -d " " -f2)")"
-    TAG_URL="https://api.github.com/repos/XTLS/Xray-core/releases/latest"
+    TAG_URL="${V6_PROXY}https://api.github.com/repos/XTLS/Xray-core/releases/latest"
     NEW_VER="$(normalizeVersion "$(curl -s "${TAG_URL}" --connect-timeout 10| grep 'tag_name' | cut -d\" -f4)")"
 
     if [[ $? -ne 0 ]] || [[ $NEW_VER == "" ]]; then
@@ -226,13 +233,15 @@ installBBR() {
 
     colorEcho $BLUE " 安装BBR模块..."
     if [[ "$PMT" = "yum" ]]; then
-        rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
-        rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-4.el7.elrepo.noarch.rpm
-        $CMD_INSTALL --enablerepo=elrepo-kernel kernel-ml
-        $CMD_REMOVE kernel-3.*
-        grub2-set-default 0
-        echo "tcp_bbr" >> /etc/modules-load.d/modules.conf
-        INSTALL_BBR=true
+        if [[ "$V6_PROXY" = "" ]]; then
+            rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
+            rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-4.el7.elrepo.noarch.rpm
+            $CMD_INSTALL --enablerepo=elrepo-kernel kernel-ml
+            $CMD_REMOVE kernel-3.*
+            grub2-set-default 0
+            echo "tcp_bbr" >> /etc/modules-load.d/modules.conf
+            INSTALL_BBR=true
+        fi
     else
         $CMD_INSTALL --install-recommends linux-generic-hwe-16.04
         grub-set-default 0
@@ -244,7 +253,7 @@ installBBR() {
 installXray() {
     rm -rf /tmp/xray
     mkdir -p /tmp/xray
-    DOWNLOAD_LINK="https://github.com/XTLS/Xray-core/releases/download/${NEW_VER}/Xray-linux-$(archAffix).zip"
+    DOWNLOAD_LINK="${V6_PROXY}https://github.com/XTLS/Xray-core/releases/download/${NEW_VER}/Xray-linux-$(archAffix).zip"
     colorEcho $BLUE " 下载Xray: ${DOWNLOAD_LINK}"
     curl -L -H "Cache-Control: no-cache" -o /tmp/xray/xray.zip ${DOWNLOAD_LINK}
     if [ $? != 0 ];then
