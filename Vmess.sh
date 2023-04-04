@@ -296,7 +296,7 @@ EOF
 
 vmessConfig() {
     local uuid="$(cat '/proc/sys/kernel/random/uuid')"
-    local alterid=`0`
+    local alterid=0
     cat > $CONFIG_FILE<<-EOF
 {
   "inbounds": [{
