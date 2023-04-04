@@ -189,7 +189,7 @@ archAffix(){
 	return 0
 }
 
-
+getData() {
     echo ""
     read -p " 是否安装BBR(默认安装)?[y/n]:" NEED_BBR
     [[ -z "$NEED_BBR" ]] && NEED_BBR=y
