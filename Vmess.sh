@@ -50,6 +50,14 @@ colorEcho() {
     echo -e "${1}${@:2}${PLAIN}"
 }
 
+configyes() {
+    local ws=`grep wsSettings $CONFIG_FILE`
+    if [[ -z "$ws" ]]; then
+        echo no
+        return
+    fi
+    echo yes
+}
 
 status() {
     if [[ ! -f /usr/local/bin/xray ]]; then
