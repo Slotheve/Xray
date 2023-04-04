@@ -415,6 +415,7 @@ uninstall() {
     stop
     systemctl disable xray
     rm -rf /etc/systemd/system/xray.service
+    systemctl daemon-reload
     rm -rf /usr/local/bin/xray
     rm -rf /usr/local/etc/xray
     colorEcho $GREEN " Xray卸载成功"
@@ -534,7 +535,7 @@ menu() {
     echo -e "  ${GREEN}1.${PLAIN}  安装Xray-VMESS"
     echo " -------------"
     echo -e "  ${GREEN}2.${PLAIN}  更新Xray"
-    echo -e "  ${GREEN}3.  ${RED}  卸载Xray${PLAIN}"
+    echo -e "  ${GREEN}3.${RED}  卸载Xray${PLAIN}"
     echo " -------------"
     echo -e "  ${GREEN}4.${PLAIN}  启动Xray"
     echo -e "  ${GREEN}5.${PLAIN}  重启Xray"
