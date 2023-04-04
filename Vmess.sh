@@ -20,14 +20,6 @@ if [[ "$?" != "0" ]]; then
     V6_PROXY="https://gh.slotheve.com/"
 fi
 
-BT="false"
-NGINX_CONF_PATH="/etc/nginx/conf.d/"
-res=`which bt 2>/dev/null`
-if [[ "$res" != "" ]]; then
-    BT="true"
-    NGINX_CONF_PATH="/www/server/panel/vhost/nginx/"
-fi
-
 checkSystem() {
     result=$(id | awk '{print $1}')
     if [[ $result != "uid=0(root)" ]]; then
@@ -194,6 +186,13 @@ getData() {
     read -p " 是否安装BBR(默认安装)?[y/n]:" NEED_BBR
     [[ -z "$NEED_BBR" ]] && NEED_BBR=y
     [[ "$NEED_BBR" = "Y" ]] && NEED_BBR=y
+    read -p " 请输入xray监听端口[100-65535的一个数字]：" PORT
+    [[ -z "${PORT}" ]] && PORT=`shuf -i200-65000 -n1`
+    if [[ "${PORT:0:1}" = "0" ]]; then
+	colorEcho ${RED}  " 端口不能以0开头"
+	exit 1
+    fi
+    colorEcho ${BLUE}  " xray端口：$PORT"
     colorEcho $BLUE " 安装BBR：$NEED_BBR"
 }
 
