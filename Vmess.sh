@@ -413,11 +413,13 @@ uninstall() {
     echo ""
     read -p " 确定卸载Xray？[y/n]：" answer
     if [[ "${answer,,}" = "y" ]]; then
-        stop
-        systemctl disable xray
-        rm -rf /etc/systemd/system/xray.service
-        rm -rf /usr/local/bin/xray
-        rm -rf /usr/local/etc/xray
+    stop
+    systemctl disable xray
+    rm -rf /etc/systemd/system/xray.service
+    rm -rf /usr/local/bin/xray
+    rm -rf /usr/local/etc/xray
+    colorEcho $GREEN " Xray卸载成功"
+    fi
 }
 
 start() {
