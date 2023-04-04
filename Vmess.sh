@@ -300,7 +300,7 @@ EOF
 
 vmessConfig() {
     local uuid="$(cat '/proc/sys/kernel/random/uuid')"
-    local alterid=`shuf -i50-80 -n1`
+    local alterid=0
     cat > $CONFIG_FILE<<-EOF
 {
   "inbounds": [{
