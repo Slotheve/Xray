@@ -537,7 +537,7 @@ menu() {
     echo -e "# ${GREEN}论坛${PLAIN}: https://slotheve.com                                #"
     echo -e "# ${GREEN}TG群${PLAIN}: https://t.me/slotheve                               #"
     echo "#############################################################"
-    echo -e "  ${GREEN}1.${PLAIN}  安装Xray-VMESS"
+    echo -e "  ${GREEN}1.${PLAIN}  安装Vmess"
     echo " -------------"
     echo -e "  ${GREEN}2.${PLAIN}  更新Xray"
     echo -e "  ${GREEN}3.${RED}  卸载Xray${PLAIN}"
