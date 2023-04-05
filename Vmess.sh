@@ -468,7 +468,7 @@ restart() {
 
 getConfigFileInfo() {
     protocol="VMess"
-
+    port=`grep port $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
     uid=`grep id $CONFIG_FILE | head -n1| cut -d: -f2 | tr -d \",' '`
     alterid=`grep alterId $CONFIG_FILE  | cut -d: -f2 | tr -d \",' '`
     network=`grep network $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
@@ -484,10 +484,7 @@ outputVmess() {
   \"id\":\"${uid}\",
   \"aid\":\"$alterid\",
   \"net\":\"tcp\",
-  \"type\":\"none\",
-  \"host\":\"\",
-  \"path\":\"\",
-  \"tls\":\"\"
+  \"type\":\"none\"
 }"
     link=`echo -n ${raw} | base64 -w 0`
     link="vmess://${link}"
@@ -496,7 +493,7 @@ outputVmess() {
     echo -e "   ${BLUE}端口(port)：${PLAIN}${RED}${port}${PLAIN}"
     echo -e "   ${BLUE}id(uuid)：${PLAIN}${RED}${uid}${PLAIN}"
     echo -e "   ${BLUE}额外id(alterid)：${PLAIN} ${RED}${alterid}${PLAIN}"
-    echo -e "   ${BLUE}加密方式(security)：${PLAIN} ${RED}auto${PLAIN}"
+    echo -e "   ${BLUE}加密方式(security)：${PLAIN} ${RED}none${PLAIN}"
     echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
     echo  
     echo -e "   ${BLUE}vmess链接:${PLAIN} $RED$link$PLAIN"
