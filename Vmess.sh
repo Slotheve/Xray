@@ -192,10 +192,6 @@ archAffix(){
 }
 
 getData() {
-    echo ""
-    read -p " 是否安装BBR(默认安装)?[y/n]:" NEED_BBR
-    [[ -z "$NEED_BBR" ]] && NEED_BBR=y
-    [[ "$NEED_BBR" = "Y" ]] && NEED_BBR=y
     read -p " 请输入xray监听端口[100-65535的一个数字]：" PORT
     [[ -z "${PORT}" ]] && PORT=`shuf -i200-65000 -n1`
     if [[ "${PORT:0:1}" = "0" ]]; then
@@ -203,58 +199,12 @@ getData() {
 	exit 1
     fi
     colorEcho ${BLUE}  " xray端口：$PORT"
-    colorEcho $BLUE " 安装BBR：$NEED_BBR"
 }
 
 setSelinux() {
     if [[ -s /etc/selinux/config ]] && grep 'SELINUX=enforcing' /etc/selinux/config; then
         sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
         setenforce 0
-    fi
-}
-
-installBBR() {
-    if [[ "$NEED_BBR" != "y" ]]; then
-        INSTALL_BBR=false
-        return
-    fi
-    result=$(lsmod | grep bbr)
-    if [[ "$result" != "" ]]; then
-        colorEcho $BLUE " BBR模块已安装"
-        INSTALL_BBR=false
-        return
-    fi
-    res=`hostnamectl | grep -i openvz`
-    if [[ "$res" != "" ]]; then
-        colorEcho $BLUE " openvz机器，跳过安装"
-        INSTALL_BBR=false
-        return
-    fi
-    
-    echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
-    echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
-    sysctl -p
-    result=$(lsmod | grep bbr)
-    if [[ "$result" != "" ]]; then
-        colorEcho $GREEN " BBR模块已启用"
-        INSTALL_BBR=false
-        return
-    fi
-
-    colorEcho $BLUE " 安装BBR模块..."
-    if [[ "$PMT" = "yum" ]]; then
-        rpm --import https://www.elrepo.org/RPM-GPG-KEY-elrepo.org
-        rpm -Uvh http://www.elrepo.org/elrepo-release-7.0-4.el7.elrepo.noarch.rpm
-        $CMD_INSTALL --enablerepo=elrepo-kernel kernel-ml
-        $CMD_REMOVE kernel-3.*
-        grub2-set-default 0
-        echo "tcp_bbr" >> /etc/modules-load.d/modules.conf
-        INSTALL_BBR=true
-    else
-        $CMD_INSTALL --install-recommends linux-generic-hwe-16.04
-        grub-set-default 0
-        echo "tcp_bbr" >> /etc/modules-load.d/modules.conf
-        INSTALL_BBR=true
     fi
 }
 
@@ -368,23 +318,9 @@ install() {
     configXray
 
     setSelinux
-    installBBR
 
     start
     showInfo
-
-    bbrReboot
-}
-
-bbrReboot() {
-    if [[ "${INSTALL_BBR}" == "true" ]]; then
-        echo  
-        echo " 为使BBR模块生效，系统将在30秒后重启"
-        echo  
-        echo -e " 您可以按 ctrl + c 取消重启，稍后输入 ${RED}reboot${PLAIN} 重启系统"
-        sleep 30
-        reboot
-    fi
 }
 
 update() {
