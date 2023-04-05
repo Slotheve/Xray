@@ -17,9 +17,12 @@ IP=`curl -sL -4 ip.sb`
 
 checkSystem() {
     result=$(id | awk '{print $1}')
-    if [[ $result != "uid=0(root)" or "用户id=0(root)" ]]; then
+    if [[ $result != "uid=0(root)" ]]; then
+        result=$(id | awk '{print $1}')
+	if [[ $result != "用户id=0(root)" ]]; then
         colorEcho $RED " 请以root身份执行该脚本"
         exit 1
+	fi
     fi
 
     res=`which yum 2>/dev/null`
