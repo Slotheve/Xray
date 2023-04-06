@@ -1,5 +1,8 @@
 # Xray-Vmess
-自用Xray-Vmess,纯Vmess,只为中转而生
+自用Xray,纯净版无TLS,WS,XTLS等,只为中转而生
   ```yaml
-bash <(curl -fsSL https://raw.githubusercontent.com/Slotheve/Xray-Vmess/main/Vmess.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/Slotheve/Xray-vmess.trojan/main/Vmess.sh)
+  ```
+  ```yaml
+bash <(curl -fsSL https://raw.githubusercontent.com/Slotheve/Xray-vmess.trojan/main/Trojan.sh)
   ```
