@@ -297,7 +297,7 @@ trojanConfig() {
     "settings": {
       "clients": [
         {
-          "password": "$PASSWD"
+          "password": "$PASSWORD"
         }
       ]},
      "streamSettings": {
