@@ -484,7 +484,7 @@ outputVmess() {
     echo -e "   ${BLUE}id(uuid)：${PLAIN}${RED}${uid}${PLAIN}"
     echo -e "   ${BLUE}额外id(alterid)：${PLAIN} ${RED}${alterid}${PLAIN}"
     echo -e "   ${BLUE}加密方式(security)：${PLAIN} ${RED}none${PLAIN}"
-    echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
+    echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}tcp${PLAIN}" 
     echo  
     echo -e "   ${BLUE}vmess链接:${PLAIN} $RED$link$PLAIN"
 }
