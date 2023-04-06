@@ -297,22 +297,27 @@ trojanConfig() {
     "settings": {
       "clients": [
         {
-        "password": "$PASSWORD",
-        "level": 0
+          "password": "$PASSWORD"
         }
       ]},
      "streamSettings": {
        "network": "tcp",
        "security": "none",
        "tcpSettings": {
-         "acceptProxyProtocol": true
+         "header": {
+           "type": "none"
+          }
         }
       }
     }],
   "outbounds": [{
-    "protocol": "freedom"
-    }
-  ]
+    "protocol": "freedom",
+    "settings": {}
+  },{
+    "protocol": "blackhole",
+    "settings": {},
+    "tag": "blocked"
+  }]
 }
 EOF
 }
