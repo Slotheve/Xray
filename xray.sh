@@ -490,7 +490,7 @@ outputVmess() {
 }
 
 outputTrojan() {
-    echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${domain}${PLAIN}"
+    echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
     echo -e "   ${BLUE}端口(port)：${PLAIN}${RED}${port}${PLAIN}"
     echo -e "   ${BLUE}密码(password)：${PLAIN}${RED}${password}${PLAIN}"
     echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
