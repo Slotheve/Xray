@@ -15,6 +15,21 @@ OS=`hostnamectl | grep -i system | cut -d: -f2`
 
 IP=`curl -sL -4 ip.sb`
 TROJAN="false"
+SS="false"
+
+ciphers=(
+aes-256-gcm
+aes-192-gcm
+aes-128-gcm
+aes-256-ctr
+aes-192-ctr
+aes-128-ctr
+aes-256-cfb
+aes-192-cfb
+aes-128-cfb
+xchacha20-ietf-poly1305
+chacha20-ietf-poly1305
+)
 
 checkSystem() {
     result=$(id | awk '{print $1}')
@@ -192,6 +207,25 @@ archAffix(){
 	return 0
 }
 
+selectciphers() {
+	for ((i=1;i<=${#ciphers[@]};i++ )); do
+		hint="${ciphers[$i-1]}"
+		echo -e "${green}${i}${plain}) ${hint}"
+	done
+	read -p "Which cipher you'd select(Default: ${ciphers[0]}):" pick
+	[ -z "$pick" ] && pick=1
+	expr ${pick} + 1 &>/dev/null
+	if [ $? -ne 0 ]; then
+		echo -e "[${red}Error${plain}] Please enter a number"
+		continue
+	fi
+	if [[ "$pick" -lt 1 || "$pick" -gt ${#ciphers[@]} ]]; then
+		echo -e "[${red}Error${plain}] Please enter a number between 1 and ${#ciphers[@]}"
+		continue
+	fi
+	METHOD=${ciphers[$pick-1]}
+}
+
 getData() {
     read -p " 请输入xray监听端口[100-65535的一个数字]：" PORT
     [[ -z "${PORT}" ]] && PORT=`shuf -i200-65000 -n1`
@@ -205,6 +239,12 @@ getData() {
         read -p " 请设置trojan密码（不输则随机生成）:" PASSWORD
         [[ -z "$PASSWORD" ]] && PASSWORD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
         colorEcho $BLUE " trojan密码：$PASSWORD"
+	elif  [[ "$SS" = "true" ]]; then
+        echo ""
+        read -p " 请设置ss密码（不输则随机生成）:" PASSWORD
+        [[ -z "$PASSWORD" ]] && PASSWORD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
+        colorEcho $BLUE " ss：$PASSWORD"
+		selectciphers
     fi
 }
 
@@ -322,12 +362,38 @@ trojanConfig() {
 EOF
 }
 
+ssConfig() {
+    cat > $CONFIG_FILE<<-EOF
+{
+  "inbounds": [{
+      "port": $PORT,
+      "protocol": "shadowsocks",
+      "settings": {
+        "method": "$METHOD",
+        "password": "$PASSWORD",
+        "network": "tcp,udp"
+      }
+    }],
+  "outbounds": [{
+    "protocol": "freedom",
+    "settings": {}
+  },{
+    "protocol": "blackhole",
+    "settings": {},
+    "tag": "blocked"
+  }]
+}
+EOF
+}
+
 configXray() {
     mkdir -p /usr/local/xray
 	if [[ "$TROJAN" = "true" ]]; then
 	    trojanConfig
+	elif [[ "$SS" = "true" ]]; then
+        ssConfig
 	else
-        vmessConfig
+		vmessConfig
 	fi
 }
 
@@ -449,50 +515,51 @@ restart() {
 
 getConfigFileInfo() {
 	trojan="false"
+	ss="false"
     protocol="VMess"
 
     port=`grep port $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
     uid=`grep id $CONFIG_FILE | head -n1| cut -d: -f2 | tr -d \",' '`
     alterid=`grep alterId $CONFIG_FILE  | cut -d: -f2 | tr -d \",' '`
     network=`grep network $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
+	password=`grep password $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
+	method=`grep method $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
 	
-	vmess=`grep vmess $CONFIG_FILE`
+	vmess=`grep vmess $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
+	trojan=`grep trojan	$CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
+	ss=`grep shadowsocks $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
     if [[ "$vmess" = "" ]]; then
-        trojan=`grep trojan $CONFIG_FILE`
-        trojan="true"
-        password=`grep password $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
-        protocol="trojan"
+		if  [[ "$trojan" = "" ]]; then
+			SS="true"
+			protocol="shadowsocks"
+		elif [[ "$vmess" = "" ]]; then
+			TROJAN="true"
+			protocol="trojan"
+		fi
     fi
 }
 
 outputVmess() {
-    raw="{
-  \"v\":\"2\",
-  \"ps\":\"\",
-  \"add\":\"$IP\",
-  \"port\":\"${port}\",
-  \"id\":\"${uid}\",
-  \"aid\":\"$alterid\",
-  \"net\":\"tcp\",
-  \"type\":\"none\"
-}"
-    link=`echo -n ${raw} | base64 -w 0`
-    link="vmess://${link}"
-
     echo -e "   ${BLUE}IP(address): ${PLAIN} ${RED}${IP}${PLAIN}"
     echo -e "   ${BLUE}端口(port)：${PLAIN}${RED}${port}${PLAIN}"
     echo -e "   ${BLUE}id(uuid)：${PLAIN}${RED}${uid}${PLAIN}"
     echo -e "   ${BLUE}额外id(alterid)：${PLAIN} ${RED}${alterid}${PLAIN}"
     echo -e "   ${BLUE}加密方式(security)：${PLAIN} ${RED}none${PLAIN}"
     echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}tcp${PLAIN}" 
-    echo  
-    echo -e "   ${BLUE}vmess链接:${PLAIN} $RED$link$PLAIN"
 }
 
 outputTrojan() {
     echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
     echo -e "   ${BLUE}端口(port)：${PLAIN}${RED}${port}${PLAIN}"
     echo -e "   ${BLUE}密码(password)：${PLAIN}${RED}${password}${PLAIN}"
+    echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
+}
+
+outputSS() {
+    echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
+    echo -e "   ${BLUE}端口(port)：${PLAIN}${RED}${port}${PLAIN}"
+    echo -e "   ${BLUE}密码(password)：${PLAIN}${RED}${password}${PLAIN}"
+	echo -e "   ${BLUE}加密协议(method)：${PLAIN}${RED}${method}${PLAIN}"
     echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
 }
 
@@ -512,9 +579,11 @@ showInfo() {
     getConfigFileInfo
 
     echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
-    if [[ "$trojan" = "true" ]]; then
+    if [[ "$TROJAN" = true ]]; then
         outputTrojan
-    else
+    elif  [[ "$SS" = true ]]; then
+		outputSS
+	else
 		outputVmess
     fi
 }
@@ -540,11 +609,11 @@ menu() {
     echo "#############################################################"
     echo -e "  ${GREEN}1.${PLAIN}  安装Vmess"
 	echo -e "  ${GREEN}2.${PLAIN}  安装Trojan"
+	echo -e "  ${GREEN}3.${PLAIN}  安装SS"
     echo " -------------"
-    echo -e "  ${GREEN}3.${PLAIN}  更新Xray"
-    echo -e "  ${GREEN}4.${RED}  卸载Xray${PLAIN}"
+    echo -e "  ${GREEN}4.${PLAIN}  更新Xray"
+    echo -e "  ${GREEN}5.${RED}  卸载Xray${PLAIN}"
     echo " -------------"
-    echo -e "  ${GREEN}5.${PLAIN}  启动Xray"
     echo -e "  ${GREEN}6.${PLAIN}  重启Xray"
     echo -e "  ${GREEN}7.${PLAIN}  停止Xray"
     echo " -------------"
@@ -569,13 +638,14 @@ menu() {
             install
 			;;
         3)
+            SS="true"
+            install
+			;;
+        4)
             update
             ;;
-        4)
-            uninstall
-            ;;
         5)
-            start
+            uninstall
             ;;
         6)
             restart
