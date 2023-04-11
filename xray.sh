@@ -239,6 +239,18 @@ getData() {
         read -p " 请设置trojan密码（不输则随机生成）:" PASSWORD
         [[ -z "$PASSWORD" ]] && PASSWORD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
         colorEcho $BLUE " trojan密码：$PASSWORD"
+		echo ""
+		read -p " 请设置trojan域名（不输则随机生成）:" DOMAIN
+		[[ -z "$DOMAIN" ]] && DOMAIN=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1`.xyz
+		colorEcho $BLUE " trojan域名：$DOMAIN"
+		echo ""
+		read -p " 请设置域名证书（不输默认生成）:" KEY
+		[[ -z "$KEY" ]] && openssl genrsa -out /usr/local/etc/xray/xray.key 2048 && KEY=`/usr/local/etc/xray/xray.key`
+		colorEcho $BLUE " 密钥路径：$KEY"
+		echo ""
+		read -p " 请设置域名证书（不输默认生成）:" CERT
+		[[ -z "$CERT" ]] && openssl req -new -x509 -days 3650 -key /usr/local/etc/xray/xray.key -out /usr/local/etc/xray/xray.crt -subj "/C=US/ST=LA/L=LAX/O=Xray/OU=Trojan/CN=&DOMAIN" && CERT=`/usr/local/etc/xray/xray.crt`
+		colorEcho $BLUE " 证书路径：$CERT"	
 	elif  [[ "$SS" = "true" ]]; then
         echo ""
         read -p " 请设置ss密码（不输则随机生成）:" PASSWORD
@@ -332,24 +344,46 @@ trojanConfig() {
     cat > $CONFIG_FILE<<-EOF
 {
   "inbounds": [{
-    "port": $PORT,
-    "protocol": "trojan",
-    "settings": {
-      "clients": [
-        {
-          "password": "$PASSWORD"
-        }
-      ]},
+     "port": $PORT,
+     "protocol": "trojan",
+     "settings": {
+       "clients": [{
+         "password": "$PASSWORD",
+         "flow": ""
+       }],
+       "fallbacks": []
+     },
      "streamSettings": {
        "network": "tcp",
-       "security": "none",
+       "security": "tls",
+       "tlsSettings": {
+         "serverName": "$DOMAIN",
+         "minVersion": "1.2",
+         "maxVersion": "1.3",
+         "cipherSuites": "",
+         "certificates": [
+           {
+             "certificateFile": "$CERT",
+             "keyFile": "$KEY"
+           }],
+         "alpn": [
+           "h2",
+           "http/1.1"
+         ]},
        "tcpSettings": {
          "header": {
            "type": "none"
-          }
-        }
-      }
-    }],
+         },
+         "acceptProxyProtocol": false
+       }},
+     "tag": "inbound-$PORT",
+     "sniffing": {
+       "enabled": true,
+       "destOverride": [
+         "http",
+         "tls"
+    ]}
+  }],
   "outbounds": [{
     "protocol": "freedom",
     "settings": {}
@@ -522,8 +556,11 @@ getConfigFileInfo() {
     uid=`grep id $CONFIG_FILE | head -n1| cut -d: -f2 | tr -d \",' '`
     alterid=`grep alterId $CONFIG_FILE  | cut -d: -f2 | tr -d \",' '`
     network=`grep network $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
+	security=`grep security $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
 	password=`grep password $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
 	method=`grep method $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
+	cert=`grep certificateFile $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
+	key=`grep keyFile $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
 	
 	vmess=`grep vmess $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
 	trojan=`grep trojan	$CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
@@ -549,10 +586,13 @@ outputVmess() {
 }
 
 outputTrojan() {
-    echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
-    echo -e "   ${BLUE}端口(port)：${PLAIN}${RED}${port}${PLAIN}"
-    echo -e "   ${BLUE}密码(password)：${PLAIN}${RED}${password}${PLAIN}"
-    echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
+	echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
+	echo -e "   ${BLUE}端口(port)：${PLAIN}${RED}${port}${PLAIN}"
+	echo -e "   ${BLUE}密码(password)：${PLAIN}${RED}${password}${PLAIN}"
+	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}"
+	echo -e "   ${BLUE}加密协议(security)：${PLAIN} ${RED}${security}${PLAIN}"
+	echo -e "   ${BLUE}证书路径(cert)：${PLAIN} ${RED}${cert}${PLAIN}"
+	echo -e "   ${BLUE}密钥路径(key)：${PLAIN} ${RED}${key}${PLAIN}"
 }
 
 outputSS() {
