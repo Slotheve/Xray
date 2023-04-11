@@ -649,7 +649,7 @@ menu() {
     echo "#############################################################"
     echo -e "  ${GREEN}1.${PLAIN}  安装Vmess"
 	echo -e "  ${GREEN}2.${PLAIN}  安装Trojan"
-	echo -e "  ${GREEN}3.${PLAIN}  安装SS"
+	echo -e "  ${GREEN}3.${PLAIN}  安装Shadowsocks"
     echo " -------------"
     echo -e "  ${GREEN}4.${PLAIN}  更新Xray"
     echo -e "  ${GREEN}5.${RED}  卸载Xray${PLAIN}"
