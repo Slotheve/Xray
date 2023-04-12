@@ -238,11 +238,11 @@ getData() {
         echo ""
         read -p " 请设置trojan密码（不输则随机生成）:" PASSWORD
         [[ -z "$PASSWORD" ]] && PASSWORD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
-        colorEcho $BLUE " trojan密码：$PASSWORD"
+        colorEcho $BLUE " 密码：$PASSWORD"
 		echo ""
 		read -p " 请设置trojan域名（不输则随机生成）:" DOMAIN
 		[[ -z "$DOMAIN" ]] && DOMAIN=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1`.xyz
-		colorEcho $BLUE " trojan域名：$DOMAIN"
+		colorEcho $BLUE " 域名：$DOMAIN"
 		echo ""
 		read -p " 请设置域名证书（不输默认生成）:" KEY
 		[[ -z "$KEY" ]] && openssl genrsa -out /usr/local/etc/xray/xray.key 2048 && mkdir \
@@ -258,9 +258,14 @@ getData() {
         echo ""
         read -p " 请设置ss密码（不输则随机生成）:" PASSWORD
         [[ -z "$PASSWORD" ]] && PASSWORD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
-        colorEcho $BLUE " ss：$PASSWORD"
+        colorEcho $BLUE " 密码：$PASSWORD"
 		selectciphers
-    fi
+    else
+		echo ""
+		read -p " 请设置vmess的UUID（不输则随机生成）:" UUID
+		[[ -z "$UUID" ]] && UUID="$(cat '/proc/sys/kernel/random/uuid')"
+		colorEcho $BLUE " UUID：$UUID"
+	fi
 }
 
 setSelinux() {
@@ -314,7 +319,6 @@ EOF
 }
 
 vmessConfig() {
-    local uuid="$(cat '/proc/sys/kernel/random/uuid')"
     local alterid=0
     cat > $CONFIG_FILE<<-EOF
 {
@@ -324,7 +328,7 @@ vmessConfig() {
     "settings": {
       "clients": [
         {
-          "id": "$uuid",
+          "id": "$UUID",
           "level": 1,
           "alterId": $alterid
         }
@@ -556,7 +560,7 @@ getConfigFileInfo() {
     protocol="VMess"
 
     port=`grep port $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
-    uid=`grep id $CONFIG_FILE | head -n1| cut -d: -f2 | tr -d \",' '`
+    uuid=`grep id $CONFIG_FILE | head -n1| cut -d: -f2 | tr -d \",' '`
     alterid=`grep alterId $CONFIG_FILE  | cut -d: -f2 | tr -d \",' '`
     network=`grep network $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
 	security=`grep security $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
@@ -582,7 +586,7 @@ getConfigFileInfo() {
 outputVmess() {
     echo -e "   ${BLUE}IP(address): ${PLAIN} ${RED}${IP}${PLAIN}"
     echo -e "   ${BLUE}端口(port)：${PLAIN}${RED}${port}${PLAIN}"
-    echo -e "   ${BLUE}id(uuid)：${PLAIN}${RED}${uid}${PLAIN}"
+    echo -e "   ${BLUE}id(uuid)：${PLAIN}${RED}${uuid}${PLAIN}"
     echo -e "   ${BLUE}额外id(alterid)：${PLAIN} ${RED}${alterid}${PLAIN}"
     echo -e "   ${BLUE}加密方式(security)：${PLAIN} ${RED}none${PLAIN}"
     echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}tcp${PLAIN}" 
