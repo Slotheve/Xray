@@ -245,8 +245,8 @@ getData() {
 		colorEcho $BLUE " 域名：$DOMAIN"
 		echo ""
 		read -p " 请设置域名证书（不输默认生成）:" KEY
-		[[ -z "$KEY" ]] && openssl genrsa -out /usr/local/etc/xray/xray.key 2048 && mkdir \
-		-pv /usr/local/etc/xray/ && chmod +x /usr/local/etc/xray/xray.key && KEY="/usr/local/etc/xray/xray.key"
+		[[ -z "$KEY" ]] && openssl genrsa -out /usr/local/etc/xray/xray.key 2048 && \
+		mkdir -pv /usr/local/etc/xray/ && chmod +x /usr/local/etc/xray/xray.key && KEY="/usr/local/etc/xray/xray.key"
 		colorEcho $BLUE " 密钥路径：$KEY"
 		echo ""
 		read -p " 请设置域名证书（不输默认生成）:" CERT
