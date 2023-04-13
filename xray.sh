@@ -1,6 +1,8 @@
 #!/bin/bash
 # xray一键安装脚本
 # Author: Slotheve<https://slotheve.com>
+# 此脚本只为中转而生,无任何伪装
+# Trojan的tls除非自定义证书路径,否则也是本地生成的无效证书
 
 
 RED="\033[31m"      # Error message
