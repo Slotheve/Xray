@@ -600,7 +600,7 @@ outputTrojan() {
 	echo -e "   ${BLUE}加密协议(security)：${PLAIN} ${RED}${security}${PLAIN}"
 	echo -e "   ${BLUE}证书路径(cert)：${PLAIN} ${RED}${cert}${PLAIN}"
 	echo -e "   ${BLUE}密钥路径(key)：${PLAIN} ${RED}${key}${PLAIN}"
-	echo -e "   ${RED}非自定义证书路径请务必开启: skip-cert-verify: true${PLAIN}
+	echo -e "   ${RED}非自定义证书路径请务必开启: skip-cert-verify: true${PLAIN}"
 }
 
 outputSS() {
