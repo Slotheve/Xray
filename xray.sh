@@ -257,12 +257,12 @@ getData() {
 		&& chmod +x /usr/local/etc/xray/xray.crt && CERT="/usr/local/etc/xray/xray.crt"
 		colorEcho $BLUE " 证书路径：$CERT"
 	elif [[ "$SS" = "true" ]]; then
-        echo ""
-        read -p " 请设置ss密码（不输则随机生成）:" PASSWORD
-        [[ -z "$PASSWORD" ]] && PASSWORD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
-        colorEcho $BLUE " 密码：$PASSWORD"
+		echo ""
+		read -p " 请设置ss密码（不输则随机生成）:" PASSWORD
+		[[ -z "$PASSWORD" ]] && PASSWORD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
+		colorEcho $BLUE " 密码：$PASSWORD"
 		selectciphers
-    elif [[ "$VLESS" = "true" ]]; then
+	elif [[ "$VLESS" = "true" ]]; then
 		echo ""
 		read -p " 请设置vless的UUID（不输则随机生成）:" UUID
 		[[ -z "$UUID" ]] && UUID="$(cat '/proc/sys/kernel/random/uuid')"
