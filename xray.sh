@@ -14,6 +14,8 @@ CONFIG_FILE="/usr/local/etc/xray/config.json"
 OS=`hostnamectl | grep -i system | cut -d: -f2`
 
 IP=`curl -sL -4 ip.sb`
+VMESS="false"
+VLESS="false"
 TROJAN="false"
 SS="false"
 
@@ -253,14 +255,34 @@ getData() {
 		[[ -z "$CERT" ]] && openssl req -new -x509 -days 3650 -key /usr/local/etc/xray/xray.key \
 		-out /usr/local/etc/xray/xray.crt -subj "/C=US/ST=LA/L=LAX/O=Xray/OU=Trojan/CN=&DOMAIN" \
 		&& chmod +x /usr/local/etc/xray/xray.crt && CERT="/usr/local/etc/xray/xray.crt"
-		colorEcho $BLUE " 证书路径：$CERT"	
-	elif  [[ "$SS" = "true" ]]; then
+		colorEcho $BLUE " 证书路径：$CERT"
+	elif [[ "$SS" = "true" ]]; then
         echo ""
         read -p " 请设置ss密码（不输则随机生成）:" PASSWORD
         [[ -z "$PASSWORD" ]] && PASSWORD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
         colorEcho $BLUE " 密码：$PASSWORD"
 		selectciphers
-    else
+    elif [[ "$VLESS" = "true" ]]; then
+		echo ""
+		read -p " 请设置vless的UUID（不输则随机生成）:" UUID
+		[[ -z "$UUID" ]] && UUID="$(cat '/proc/sys/kernel/random/uuid')"
+		colorEcho $BLUE " UUID：$UUID"
+		echo ""
+		read -p " 请设置vless域名（不输则随机生成）:" DOMAIN
+		[[ -z "$DOMAIN" ]] && DOMAIN=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1`.xyz
+		colorEcho $BLUE " 域名：$DOMAIN"
+		echo ""
+		read -p " 请设置域名证书（不输默认生成）:" KEY
+		[[ -z "$KEY" ]] && openssl genrsa -out /usr/local/etc/xray/xray.key 2048 && \
+		mkdir -p /usr/local/etc/xray/ && chmod +x /usr/local/etc/xray/xray.key && KEY="/usr/local/etc/xray/xray.key"
+		colorEcho $BLUE " 密钥路径：$KEY"
+		echo ""
+		read -p " 请设置域名证书（不输默认生成）:" CERT
+		[[ -z "$CERT" ]] && openssl req -new -x509 -days 3650 -key /usr/local/etc/xray/xray.key \
+		-out /usr/local/etc/xray/xray.crt -subj "/C=US/ST=LA/L=LAX/O=Xray/OU=Trojan/CN=&DOMAIN" \
+		&& chmod +x /usr/local/etc/xray/xray.crt && CERT="/usr/local/etc/xray/xray.crt"
+		colorEcho $BLUE " 证书路径：$CERT"
+	else
 		echo ""
 		read -p " 请设置vmess的UUID（不输则随机生成）:" UUID
 		[[ -z "$UUID" ]] && UUID="$(cat '/proc/sys/kernel/random/uuid')"
@@ -291,8 +313,8 @@ installXray() {
     cp /tmp/xray/xray /usr/local/bin
     cp /tmp/xray/geo* /usr/local/share/xray
     chmod +x /usr/local/bin/xray || {
-        colorEcho $RED " Xray安装失败"
-        exit 1
+	colorEcho $RED " Xray安装失败"
+	exit 1
     }
 
     cat >/etc/systemd/system/xray.service<<-EOF
@@ -326,14 +348,51 @@ vmessConfig() {
     "port": $PORT,
     "protocol": "vmess",
     "settings": {
-      "clients": [
-        {
+      "clients": [{
           "id": "$UUID",
           "level": 1,
           "alterId": $alterid
-        }
-      ]
-    }
+         }]
+	  }
+  }],
+  "outbounds": [{
+    "protocol": "freedom",
+    "settings": {}
+  },{
+    "protocol": "blackhole",
+    "settings": {},
+    "tag": "blocked"
+  }]
+}
+EOF
+}
+
+vlessConfig() {
+    cat > $CONFIG_FILE<<-EOF
+{
+  "inbounds": [{
+    "port": $PORT,
+    "protocol": "vless",
+    "settings": {
+      "clients": [{
+          "id": "$UUID",
+          "level": 0
+      }],
+      "decryption": "none",
+      "fallbacks": []
+    },
+    "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+            "serverName": "$DOMAIN",
+            "alpn": ["http/1.1", "h2"],
+            "certificates": [{
+                    "certificateFile": "$CERT",
+                    "keyFile": "$KEY"
+            }]
+         }
+      }
   }],
   "outbounds": [{
     "protocol": "freedom",
@@ -368,11 +427,10 @@ trojanConfig() {
          "minVersion": "1.2",
          "maxVersion": "1.3",
          "cipherSuites": "",
-         "certificates": [
-           {
+         "certificates": [{
              "certificateFile": "$CERT",
              "keyFile": "$KEY"
-           }],
+         }],
          "alpn": [
            "h2",
            "http/1.1"
@@ -428,176 +486,182 @@ EOF
 }
 
 configXray() {
-    mkdir -p /usr/local/xray
-	if [[ "$TROJAN" = "true" ]]; then
-	    trojanConfig
-	elif [[ "$SS" = "true" ]]; then
-        ssConfig
-	else
+	mkdir -p /usr/local/xray
+	if   [[ "$VMESS" = "true" ]]; then
 		vmessConfig
+	elif [[ "$VLESS" = "true" ]]; then
+		vlessConfig
+	elif [[ "$TROJAN" = "true" ]]; then
+		trojanConfig
+	elif [[ "$SS" = "true" ]]; then
+		ssConfig
 	fi
 }
 
 install() {
-    getData
+	getData
 
-    $PMT clean all
-    [[ "$PMT" = "apt" ]] && $PMT update
-    #echo $CMD_UPGRADE | bash
-    $CMD_INSTALL wget vim unzip tar openssl
-    $CMD_INSTALL net-tools
-    if [[ "$PMT" = "apt" ]]; then
-        $CMD_INSTALL libssl-dev
-    fi
-    res=`which unzip 2>/dev/null`
-    if [[ $? -ne 0 ]]; then
-        colorEcho $RED " unzip安装失败，请检查网络"
-        exit 1
-    fi
+	$PMT clean all
+	[[ "$PMT" = "apt" ]] && $PMT update
+	#echo $CMD_UPGRADE | bash
+	$CMD_INSTALL wget vim unzip tar openssl
+	$CMD_INSTALL net-tools
+	if [[ "$PMT" = "apt" ]]; then
+		$CMD_INSTALL libssl-dev
+	fi
+	res=`which unzip 2>/dev/null`
+	if [[ $? -ne 0 ]]; then
+		colorEcho $RED " unzip安装失败，请检查网络"
+		exit 1
+	fi
 
-    colorEcho $BLUE " 安装Xray..."
-    getVersion
-    RETVAL="$?"
-    if [[ $RETVAL == 0 ]]; then
-        colorEcho $BLUE " Xray最新版 ${CUR_VER} 已经安装"
-    elif [[ $RETVAL == 3 ]]; then
-        exit 1
-    else
-        colorEcho $BLUE " 安装Xray ${NEW_VER} ，架构$(archAffix)"
-        installXray
-    fi
-
-    configXray
-
-    setSelinux
-
-    start
-    showInfo
+	colorEcho $BLUE " 安装Xray..."
+	getVersion
+	RETVAL="$?"
+	if [[ $RETVAL == 0 ]]; then
+		colorEcho $BLUE " Xray最新版 ${CUR_VER} 已经安装"
+	elif [[ $RETVAL == 3 ]]; then
+		exit 1
+	else
+		colorEcho $BLUE " 安装Xray ${NEW_VER} ，架构$(archAffix)"
+		installXray
+	fi
+		configXray
+		setSelinux
+		start
+		showInfo
 }
 
 update() {
-    res=`status`
-    if [[ $res -lt 2 ]]; then
-        colorEcho $RED " Xray未安装，请先安装！"
-        return
-    fi
+	res=`status`
+	if [[ $res -lt 2 ]]; then
+		colorEcho $RED " Xray未安装，请先安装！"
+		return
+	fi
 
-    getVersion
-    RETVAL="$?"
-    if [[ $RETVAL == 0 ]]; then
-        colorEcho $BLUE " Xray最新版 ${CUR_VER} 已经安装"
-    elif [[ $RETVAL == 3 ]]; then
-        exit 1
-    else
-        colorEcho $BLUE " 安装Xray ${NEW_VER} ，架构$(archAffix)"
-        installXray
-        stop
-        start
-
-        colorEcho $GREEN " 最新版Xray安装成功！"
-    fi
+	getVersion
+	RETVAL="$?"
+	if [[ $RETVAL == 0 ]]; then
+		colorEcho $BLUE " Xray最新版 ${CUR_VER} 已经安装"
+	elif [[ $RETVAL == 3 ]]; then
+		exit 1
+	else
+		colorEcho $BLUE " 安装Xray ${NEW_VER} ，架构$(archAffix)"
+		installXray
+		stop
+		start
+		colorEcho $GREEN " 最新版Xray安装成功！"
+	fi
 }
 
 uninstall() {
-    res=`status`
-    if [[ $res -lt 2 ]]; then
-        colorEcho $RED " Xray未安装，请先安装！"
-        return
-    fi
+	res=`status`
+	if [[ $res -lt 2 ]]; then
+		colorEcho $RED " Xray未安装，请先安装！"
+		return
+	fi
 
-    echo ""
-    read -p " 确定卸载Xray？[y/n]：" answer
-    if [[ "${answer,,}" = "y" ]]; then
-    stop
-    systemctl disable xray
-    rm -rf /etc/systemd/system/xray.service
-    systemctl daemon-reload
-    rm -rf /usr/local/bin/xray
-    rm -rf /usr/local/etc/xray
-    colorEcho $GREEN " Xray卸载成功"
-    fi
+	echo ""
+	read -p " 确定卸载Xray？[y/n]：" answer
+	if [[ "${answer,,}" = "y" ]]; then
+	stop
+	systemctl disable xray
+	rm -rf /etc/systemd/system/xray.service
+	systemctl daemon-reload
+	rm -rf /usr/local/bin/xray
+	rm -rf /usr/local/etc/xray
+	colorEcho $GREEN " Xray卸载成功"
+	fi
 }
 
 start() {
-    res=`status`
-    if [[ $res -lt 2 ]]; then
-        colorEcho $RED " Xray未安装，请先安装！"
-        return
-    fi
-    systemctl restart xray
-    sleep 2
-    
-    port=`grep port $CONFIG_FILE| head -n 1| cut -d: -f2| tr -d \",' '`
-    res=`ss -nutlp| grep ${port} | grep -i xray`
-    if [[ "$res" = "" ]]; then
-        colorEcho $RED " Xray启动失败，请检查日志或查看端口是否被占用！"
-    else
-        colorEcho $BLUE " Xray启动成功"
-    fi
+	res=`status`
+	if [[ $res -lt 2 ]]; then
+		colorEcho $RED " Xray未安装，请先安装！"
+		return
+	fi
+	systemctl restart xray
+	sleep 2
+
+	port=`grep port $CONFIG_FILE| head -n 1| cut -d: -f2| tr -d \",' '`
+	res=`ss -nutlp| grep ${port} | grep -i xray`
+	if [[ "$res" = "" ]]; then
+		colorEcho $RED " Xray启动失败，请检查日志或查看端口是否被占用！"
+	else
+		colorEcho $BLUE " Xray启动成功"
+	fi
 }
 
 stop() {
-    systemctl stop xray
-    colorEcho $BLUE " Xray停止成功"
+	systemctl stop xray
+	colorEcho $BLUE " Xray停止成功"
 }
 
 
 restart() {
-    res=`status`
-    if [[ $res -lt 2 ]]; then
-        colorEcho $RED " Xray未安装，请先安装！"
-        return
-    fi
+	res=`status`
+	if [[ $res -lt 2 ]]; then
+		colorEcho $RED " Xray未安装，请先安装！"
+		return
+	fi
 
-    stop
-    start
+	stop
+	start
 }
 
 
 getConfigFileInfo() {
-	trojan="false"
-	ss="false"
-    protocol="VMess"
-
-    port=`grep port $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
-    uuid=`grep id $CONFIG_FILE | head -n1| cut -d: -f2 | tr -d \",' '`
-    alterid=`grep alterId $CONFIG_FILE  | cut -d: -f2 | tr -d \",' '`
-    network=`grep network $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
+	protocol="vmess"
+	port=`grep port $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
+	uuid=`grep id $CONFIG_FILE | head -n1| cut -d: -f2 | tr -d \",' '`
+	alterid=`grep alterId $CONFIG_FILE  | cut -d: -f2 | tr -d \",' '`
+	network=`grep network $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
 	security=`grep security $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
 	password=`grep password $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
 	method=`grep method $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
 	cert=`grep certificateFile $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
 	key=`grep keyFile $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
-	
-	vmess=`grep vmess $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
-	trojan=`grep trojan	$CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
-	ss=`grep shadowsocks $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
-    if [[ "$vmess" = "" ]]; then
-		if  [[ "$trojan" = "" ]]; then
-			SS="true"
-			protocol="shadowsocks"
-		elif [[ "$vmess" = "" ]]; then
-			TROJAN="true"
-			protocol="trojan"
-		fi
-    fi
+	domain=`grep serverName $CONFIG_FILE  | cut -d: -f2 | tr -d \",' '`
+	xray=`grep protocol $CONFIG_FILE | head -n1 | cut -d: -f2 | tr -d \",' '`
+	if   [[ "$xray" = "$protocol" ]]; then
+		protocol="vmess"
+	elif [[ "$VLESS" != "$protocol" ]]; then
+		protocol="$xray"
+	fi
 }
 
 outputVmess() {
-    echo -e "   ${BLUE}IP(address): ${PLAIN} ${RED}${IP}${PLAIN}"
-    echo -e "   ${BLUE}端口(port)：${PLAIN}${RED}${port}${PLAIN}"
-    echo -e "   ${BLUE}id(uuid)：${PLAIN}${RED}${uuid}${PLAIN}"
-    echo -e "   ${BLUE}额外id(alterid)：${PLAIN} ${RED}${alterid}${PLAIN}"
-    echo -e "   ${BLUE}加密方式(security)：${PLAIN} ${RED}none${PLAIN}"
-    echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}tcp${PLAIN}" 
+	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
+	echo -e "   ${BLUE}IP(address): ${PLAIN} ${RED}${IP}${PLAIN}"
+	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
+	echo -e "   ${BLUE}id(uuid)：${PLAIN} ${RED}${uuid}${PLAIN}"
+	echo -e "   ${BLUE}额外id(alterid)：${PLAIN} ${RED}${alterid}${PLAIN}"
+	echo -e "   ${BLUE}加密方式(security)：${PLAIN} ${RED}none${PLAIN}"
+	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}tcp${PLAIN}" 
+}
+
+outputVless() {
+	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
+	echo -e "   ${BLUE}IP(address): ${PLAIN} ${RED}${IP}${PLAIN}"
+	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
+	echo -e "   ${BLUE}id(uuid)：${PLAIN} ${RED}${uuid}${PLAIN}"
+	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}"
+	echo -e "   ${BLUE}加密协议(security)：${PLAIN} ${RED}${security}${PLAIN}"
+	echo -e "   ${BLUE}域名(domain)：${PLAIN} ${RED}${domain}${PLAIN}"
+	echo -e "   ${BLUE}证书路径(cert)：${PLAIN} ${RED}${cert}${PLAIN}"
+	echo -e "   ${BLUE}密钥路径(key)：${PLAIN} ${RED}${key}${PLAIN}"
+	echo ""
+	echo -e "   ${RED}非自定义证书路径请务必开启: skip-cert-verify: true${PLAIN}"
 }
 
 outputTrojan() {
+	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
 	echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
-	echo -e "   ${BLUE}端口(port)：${PLAIN}${RED}${port}${PLAIN}"
-	echo -e "   ${BLUE}密码(password)：${PLAIN}${RED}${password}${PLAIN}"
+	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
+	echo -e "   ${BLUE}密码(password)：${PLAIN} ${RED}${password}${PLAIN}"
 	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}"
 	echo -e "   ${BLUE}加密协议(security)：${PLAIN} ${RED}${security}${PLAIN}"
+	echo -e "   ${BLUE}域名(domain)：${PLAIN} ${RED}${domain}${PLAIN}"
 	echo -e "   ${BLUE}证书路径(cert)：${PLAIN} ${RED}${cert}${PLAIN}"
 	echo -e "   ${BLUE}密钥路径(key)：${PLAIN} ${RED}${key}${PLAIN}"
 	echo ""
@@ -605,117 +669,125 @@ outputTrojan() {
 }
 
 outputSS() {
-    echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
-    echo -e "   ${BLUE}端口(port)：${PLAIN}${RED}${port}${PLAIN}"
-    echo -e "   ${BLUE}密码(password)：${PLAIN}${RED}${password}${PLAIN}"
-	echo -e "   ${BLUE}加密协议(method)：${PLAIN}${RED}${method}${PLAIN}"
-    echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
+	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
+	echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
+	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
+	echo -e "   ${BLUE}密码(password)：${PLAIN} ${RED}${password}${PLAIN}"
+	echo -e "   ${BLUE}加密协议(method)：${PLAIN} ${RED}${method}${PLAIN}"
+	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
 }
 
 showInfo() {
-    res=`status`
-    if [[ $res -lt 2 ]]; then
-        colorEcho $RED " Xray未安装，请先安装！"
-        return
-    fi
-    
-    echo ""
-    echo -n -e " ${BLUE}Xray运行状态：${PLAIN}"
-    statusText
-    echo -e " ${BLUE}Xray配置文件: ${PLAIN} ${RED}${CONFIG_FILE}${PLAIN}"
-    colorEcho $BLUE " Xray配置信息："
+	res=`status`
+	if [[ $res -lt 2 ]]; then
+		colorEcho $RED " Xray未安装，请先安装！"
+		return
+	fi
 
-    getConfigFileInfo
+	echo ""
+	echo -n -e " ${BLUE}Xray运行状态：${PLAIN}"
+	statusText
+	echo -e " ${BLUE}Xray配置文件: ${PLAIN} ${RED}${CONFIG_FILE}${PLAIN}"
+	colorEcho $BLUE " Xray配置信息："
 
-    echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
-    if [[ "$TROJAN" = true ]]; then
-        outputTrojan
-    elif  [[ "$SS" = true ]]; then
-		outputSS
-	else
+	getConfigFileInfo
+	if   [[ "$protocol" = vmess ]]; then
 		outputVmess
-    fi
+	elif [[ "$protocol" = vless ]]; then
+		outputVless
+	elif [[ "$protocol" = trojan ]]; then
+		outputTrojan
+	elif [[ "$protocol" = shadowsocks ]]; then
+		outputSS
+	fi
 }
 
 showLog() {
-    res=`status`
-    if [[ $res -lt 2 ]]; then
-        colorEcho $RED " Xray未安装，请先安装！"
-        return
-    fi
+	res=`status`
+	if [[ $res -lt 2 ]]; then
+		colorEcho $RED " Xray未安装，请先安装！"
+		return
+	fi
 
-    journalctl -xen -u xray --no-pager
+	journalctl -xen -u xray --no-pager
 }
 
 menu() {
-    clear
-    echo "#############################################################"
-    echo -e "#                     ${RED}Xray一键安装脚本${PLAIN}                      #"
-    echo -e "# ${GREEN}作者${PLAIN}: 怠惰(Slotheve)                                      #"
-    echo -e "# ${GREEN}网址${PLAIN}: https://slotheve.com                                #"
-    echo -e "# ${GREEN}论坛${PLAIN}: https://slotheve.com                                #"
-    echo -e "# ${GREEN}TG群${PLAIN}: https://t.me/slotheve                               #"
-    echo "#############################################################"
-    echo -e "# ${RED}此脚本只为隧道或IPLC/IEPL中转而生,无任何伪装${PLAIN}              #"
-    echo -e "# ${RED}Trojan的tls除非自定义证书路径,否则也是本地生成的无效证书${PLAIN}  #"
-    echo "#############################################################"
-    echo -e "  ${GREEN}1.${PLAIN}  安装Vmess ${GREEN}(UOT)${PLAIN}"
-    echo -e "  ${GREEN}2.${PLAIN}  安装Trojan ${GREEN}(UOT)${PLAIN}"
-    echo -e "  ${GREEN}3.${PLAIN}  安装Shadowsocks ${GREEN}(原生UDP)${PLAIN}"
-    echo " -------------"
-    echo -e "  ${GREEN}4.${PLAIN}  更新Xray"
-    echo -e "  ${GREEN}5.${RED}  卸载Xray${PLAIN}"
-    echo " -------------"
-    echo -e "  ${GREEN}6.${PLAIN}  重启Xray"
-    echo -e "  ${GREEN}7.${PLAIN}  停止Xray"
-    echo " -------------"
-    echo -e "  ${GREEN}8.${PLAIN}  查看Xray配置"
-    echo -e "  ${GREEN}9.${PLAIN}  查看Xray日志"
-    echo " -------------"
-    echo -e "  ${GREEN}0.${PLAIN}  退出"
-    echo -n " 当前状态："
-    statusText
-    echo 
+	clear
+	echo "#############################################################"
+	echo -e "#                     ${RED}Xray一键安装脚本${PLAIN}                      #"
+	echo -e "# ${GREEN}作者${PLAIN}: 怠惰(Slotheve)                                      #"
+	echo -e "# ${GREEN}网址${PLAIN}: https://slotheve.com                                #"
+	echo -e "# ${GREEN}论坛${PLAIN}: https://slotheve.com                                #"
+	echo -e "# ${GREEN}TG群${PLAIN}: https://t.me/slotheve                               #"
+	echo "#############################################################"
+	echo -e "# ${RED}此脚本只为隧道或IPLC/IEPL中转而生,无任何伪装${PLAIN}              #"
+	echo -e "# ${RED}Trojan的tls除非自定义证书路径,否则也是本地生成的无效证书${PLAIN}  #"
+	echo "#############################################################"
+	echo " -------------"
+	echo -e "  ${GREEN}1.${PLAIN}  安装vmess ${GREEN}(UOT)${PLAIN}"
+	echo -e "  ${GREEN}2.${PLAIN}  安装vless ${GREEN}(UOT)${PLAIN}"
+	echo -e "  ${GREEN}3.${PLAIN}  安装Trojan ${GREEN}(UOT)${PLAIN}"
+	echo -e "  ${GREEN}4.${PLAIN}  安装Shadowsocks ${GREEN}(原生UDP)${PLAIN}"
+	echo " -------------"
+	echo -e "  ${GREEN}5.${PLAIN}  更新Xray"
+	echo -e "  ${GREEN}6.${RED}  卸载Xray${PLAIN}"
+	echo " -------------"
+	echo -e "  ${GREEN}7.${PLAIN}  重启Xray"
+	echo -e "  ${GREEN}8.${PLAIN}  停止Xray"
+	echo " -------------"
+	echo -e "  ${GREEN}9.${PLAIN}  查看Xray配置"
+	echo -e "  ${GREEN}10.${PLAIN}  查看Xray日志"
+	echo " -------------"
+	echo -e "  ${GREEN}0.${PLAIN}  退出"
+	echo -n " 当前状态："
+	statusText
+	echo 
 
-    read -p " 请选择操作[0-8]：" answer
-    case $answer in
-        0)
-            exit 0
-            ;;
-        1)
-            install
-            ;;
-        2)
-            TROJAN="true"
-            install
+	read -p " 请选择操作[0-8]：" answer
+	case $answer in
+		0)
+			exit 0
 			;;
-        3)
-            SS="true"
-            install
+		1)
+			VMESS="true"
+			install
 			;;
-        4)
-            update
-            ;;
-        5)
-            uninstall
-            ;;
-        6)
-            restart
-            ;;
-        7)
-            stop
-            ;;
-        8)
-            showInfo
-            ;;
-        9)
-            showLog
-            ;;
-        *)
-            colorEcho $RED " 请选择正确的操作！"
-            exit 1
-            ;;
-    esac
+		2)
+			VLESS="true"
+			install
+			;;
+		3)
+			TROJAN="true"
+			install
+			;;
+		4)
+			SS="true"
+			install
+			;;
+		5)
+			update
+			;;
+		6)
+			uninstall
+			;;
+		7)
+			restart
+			;;
+		8)
+			stop
+			;;
+		9)
+			showInfo
+			;;
+		10)
+			showLog
+			;;
+		*)
+			colorEcho $RED " 请选择正确的操作！"
+			exit 1
+			;;
+	esac
 }
 
 checkSystem
@@ -723,11 +795,11 @@ checkSystem
 action=$1
 [[ -z $1 ]] && action=menu
 case "$action" in
-    menu|update|uninstall|start|restart|stop|showInfo|showLog)
-        ${action}
-        ;;
-    *)
-        echo " 参数错误"
-        echo " 用法: `basename $0` [menu|update|uninstall|start|restart|stop|showInfo|showLog]"
-        ;;
+	menu|update|uninstall|start|restart|stop|showInfo|showLog)
+		${action}
+		;;
+	*)
+		echo " 参数错误"
+		echo " 用法: `basename $0` [menu|update|uninstall|start|restart|stop|showInfo|showLog]"
+		;;
 esac
