@@ -847,7 +847,7 @@ menu() {
 	echo -e "  ${GREEN}2.${PLAIN}  安装vless ${GREEN}(UDP over TCP)${PLAIN}"
 	echo -e "  ${GREEN}3.${PLAIN}  安装Trojan ${GREEN}(UDP over TCP)${PLAIN}"
 	echo -e "  ${GREEN}4.${PLAIN}  安装Shadowsocks ${GREEN}(原生UDP)${PLAIN}"
-	echo -e "  ${GREEN}5.${PLAIN}  安装Socks ${GREEN}(原生UDP)${PLAIN}"
+	echo -e "  ${GREEN}5.${PLAIN}  安装Socks ${GREEN}(原生UDP)${PLAIN} ${RED}不推荐${PLAIN}"
 	echo " -------------"
 	echo -e "  ${GREEN}6.${PLAIN}  更新Xray"
 	echo -e "  ${GREEN}7.${RED}  卸载Xray${PLAIN}"
