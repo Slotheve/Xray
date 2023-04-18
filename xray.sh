@@ -289,6 +289,7 @@ getData() {
 			colorEcho $BLUE " 证书路径：$CERT"
 		else
 			TLS="false"
+			colorEcho $BLUE " 已关闭 TLS"
 		fi
 	elif [[ "$VMESS" = "true" ]]; then
 		echo ""
