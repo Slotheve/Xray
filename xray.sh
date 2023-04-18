@@ -18,6 +18,7 @@ VMESS="false"
 VLESS="false"
 TROJAN="false"
 SS="false"
+SOCKS="false"
 
 ciphers=(
 aes-256-gcm
@@ -291,6 +292,15 @@ getData() {
 			TLS="false"
 			colorEcho $BLUE " 已关闭 TLS"
 		fi
+	elif [[ "$SOCKS" = "true" ]]; then
+		echo ""
+		read -p " 请设置socks的用户名（不输则随机生成）:" USER
+		[[ -z "$USER" ]] && USER=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 6 | head -n 1`
+		colorEcho $BLUE " 用户名：$USER"
+		echo ""
+		read -p " 请设置socks的密码（不输则随机生成）:" PASSWORD
+		[[ -z "$PASSWORD" ]] && PASSWORD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1`
+		colorEcho $BLUE " 密码：$PASSWORD"
 	elif [[ "$VMESS" = "true" ]]; then
 		echo ""
 		read -p " 请设置vmess的UUID（不输则随机生成）:" UUID
@@ -528,6 +538,37 @@ ssConfig() {
 EOF
 }
 
+socksConfig() {
+	cat > $CONFIG_FILE<<-EOF
+{
+	"inbounds": [{
+		"port": $PORT,
+		"protocol": "socks",
+		"settings": {
+			"auth": "password",
+			"accounts": [{
+				"user": "$USER",
+				"pass": "$PASSWORD"
+				}],
+			"udp": true
+		},
+		"sniffing": {
+		"enabled": true,
+		"destOverride": ["http", "tls"]
+		}
+	}],
+	"outbounds": [{
+		"protocol": "freedom",
+		"settings": {}
+	},{
+		"protocol": "blackhole",
+		"settings": {},
+		"tag": "blocked"
+  }]
+}
+EOF
+}
+
 configXray() {
 	mkdir -p /usr/local/xray
 	if   [[ "$VMESS" = "true" ]]; then
@@ -542,6 +583,8 @@ configXray() {
 		trojanConfig
 	elif [[ "$SS" = "true" ]]; then
 		ssConfig
+	elif [[ "$SOCKS" = "true" ]]; then
+		socksConfig
 	fi
 }
 
@@ -661,15 +704,21 @@ getConfigFileInfo() {
 	protocol="vmess"
 	port=`grep port $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
 	uuid=`grep id $CONFIG_FILE | head -n1| cut -d: -f2 | tr -d \",' '`
-	alterid=`grep alterId $CONFIG_FILE  | cut -d: -f2 | tr -d \",' '`
-	network=`grep network $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
-	security=`grep security $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
-	password=`grep password $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
+	alterid=`grep alterId $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
+	network=`grep network $CONFIG_FILE | tail -n1| cut -d: -f2 | tr -d \",' '`
+	security=`grep security $CONFIG_FILE | tail -n1| cut -d: -f2 | tr -d \",' '`
 	method=`grep method $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
-	cert=`grep certificateFile $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
-	key=`grep keyFile $CONFIG_FILE  | tail -n1| cut -d: -f2 | tr -d \",' '`
-	domain=`grep serverName $CONFIG_FILE  | cut -d: -f2 | tr -d \",' '`
+	username=`grep user $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
+	cert=`grep certificateFile $CONFIG_FILE | tail -n1| cut -d: -f2 | tr -d \",' '`
+	key=`grep keyFile $CONFIG_FILE | tail -n1 | cut -d: -f2 | tr -d \",' '`
+	domain=`grep serverName $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
 	xray=`grep protocol $CONFIG_FILE | head -n1 | cut -d: -f2 | tr -d \",' '`
+	if [[ "$xray" = "socks" ]]; then
+		password=`grep pass $CONFIG_FILE | tail -n1 | cut -d: -f2 | tr -d \",' '`
+	else
+		password=`grep password $CONFIG_FILE | cut -d: -f2 | tr -d \",' '`
+	fi
+
 	if   [[ "$xray" = "$protocol" ]]; then
 		protocol="vmess"
 	elif [[ "$VLESS" != "$protocol" ]]; then
@@ -732,6 +781,14 @@ outputSS() {
 	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
 }
 
+outputSocks() {
+	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
+	echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
+	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
+	echo -e "   ${BLUE}用户名(username)：${PLAIN} ${RED}${username}${PLAIN}"
+	echo -e "   ${BLUE}密码(password)：${PLAIN} ${RED}${password}${PLAIN}"
+}
+
 showInfo() {
 	res=`status`
 	if [[ $res -lt 2 ]]; then
@@ -758,6 +815,8 @@ showInfo() {
 		outputTrojan
 	elif [[ "$protocol" = shadowsocks ]]; then
 		outputSS
+	elif [[ "$protocol" = socks ]]; then
+		outputSocks
 	fi
 }
 
@@ -788,15 +847,16 @@ menu() {
 	echo -e "  ${GREEN}2.${PLAIN}  安装vless ${GREEN}(UDP over TCP)${PLAIN}"
 	echo -e "  ${GREEN}3.${PLAIN}  安装Trojan ${GREEN}(UDP over TCP)${PLAIN}"
 	echo -e "  ${GREEN}4.${PLAIN}  安装Shadowsocks ${GREEN}(原生UDP)${PLAIN}"
+	echo -e "  ${GREEN}5.${PLAIN}  安装Socks ${GREEN}(原生UDP)${PLAIN}"
 	echo " -------------"
-	echo -e "  ${GREEN}5.${PLAIN}  更新Xray"
-	echo -e "  ${GREEN}6.${RED}  卸载Xray${PLAIN}"
+	echo -e "  ${GREEN}6.${PLAIN}  更新Xray"
+	echo -e "  ${GREEN}7.${RED}  卸载Xray${PLAIN}"
 	echo " -------------"
-	echo -e "  ${GREEN}7.${PLAIN}  重启Xray"
-	echo -e "  ${GREEN}8.${PLAIN}  停止Xray"
+	echo -e "  ${GREEN}8.${PLAIN}  重启Xray"
+	echo -e "  ${GREEN}9.${PLAIN}  停止Xray"
 	echo " -------------"
-	echo -e "  ${GREEN}9.${PLAIN}  查看Xray配置"
-	echo -e "  ${GREEN}10.${PLAIN}  查看Xray日志"
+	echo -e "  ${GREEN}10.${PLAIN}  查看Xray配置"
+	echo -e "  ${GREEN}11.${PLAIN}  查看Xray日志"
 	echo " -------------"
 	echo -e "  ${GREEN}0.${PLAIN}  退出"
 	echo -n " 当前状态："
@@ -825,21 +885,25 @@ menu() {
 			install
 			;;
 		5)
-			update
+			SOCKS="true"
+			install
 			;;
 		6)
-			uninstall
+			update
 			;;
 		7)
-			restart
+			uninstall
 			;;
 		8)
-			stop
+			restart
 			;;
 		9)
-			showInfo
+			stop
 			;;
 		10)
+			showInfo
+			;;
+		11)
 			showLog
 			;;
 		*)
