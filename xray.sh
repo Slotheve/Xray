@@ -268,21 +268,28 @@ getData() {
 		[[ -z "$UUID" ]] && UUID="$(cat '/proc/sys/kernel/random/uuid')"
 		colorEcho $BLUE " UUID：$UUID"
 		echo ""
-		read -p " 请设置vless域名（不输则随机生成）:" DOMAIN
-		[[ -z "$DOMAIN" ]] && DOMAIN=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1`.xyz
-		colorEcho $BLUE " 域名：$DOMAIN"
-		echo ""
-		read -p " 请设置域名证书（不输默认生成）:" KEY
-		[[ -z "$KEY" ]] && openssl genrsa -out /usr/local/etc/xray/xray.key 2048 && \
-		mkdir -p /usr/local/etc/xray/ && chmod +x /usr/local/etc/xray/xray.key && KEY="/usr/local/etc/xray/xray.key"
-		colorEcho $BLUE " 密钥路径：$KEY"
-		echo ""
-		read -p " 请设置域名证书（不输默认生成）:" CERT
-		[[ -z "$CERT" ]] && openssl req -new -x509 -days 3650 -key /usr/local/etc/xray/xray.key \
-		-out /usr/local/etc/xray/xray.crt -subj "/C=US/ST=LA/L=LAX/O=Xray/OU=Trojan/CN=&DOMAIN" \
-		&& chmod +x /usr/local/etc/xray/xray.crt && CERT="/usr/local/etc/xray/xray.crt"
-		colorEcho $BLUE " 证书路径：$CERT"
-	else
+		read -p " 是否需要tls(包括不验证tls)？[y/n]：" answer
+		if [[ "${answer,,}" = "y" ]]; then
+			TLS="true"
+			echo ""
+			read -p " 请设置vless域名（不输则随机生成）:" DOMAIN
+			[[ -z "$DOMAIN" ]] && DOMAIN=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1`.xyz
+			colorEcho $BLUE " 域名：$DOMAIN"
+			echo ""
+			read -p " 请设置域名证书（不输默认生成）:" KEY
+			[[ -z "$KEY" ]] && openssl genrsa -out /usr/local/etc/xray/xray.key 2048 && \
+			mkdir -p /usr/local/etc/xray/ && chmod +x /usr/local/etc/xray/xray.key && KEY="/usr/local/etc/xray/xray.key"
+			colorEcho $BLUE " 密钥路径：$KEY"
+			echo ""
+			read -p " 请设置域名证书（不输默认生成）:" CERT
+			[[ -z "$CERT" ]] && openssl req -new -x509 -days 3650 -key /usr/local/etc/xray/xray.key \
+			-out /usr/local/etc/xray/xray.crt -subj "/C=US/ST=LA/L=LAX/O=Xray/OU=Trojan/CN=&DOMAIN" \
+			&& chmod +x /usr/local/etc/xray/xray.crt && CERT="/usr/local/etc/xray/xray.crt"
+			colorEcho $BLUE " 证书路径：$CERT"
+		else
+			TLS="false"
+		fi
+	elif [[ "$VMESS" = "true" ]]; then
 		echo ""
 		read -p " 请设置vmess的UUID（不输则随机生成）:" UUID
 		[[ -z "$UUID" ]] && UUID="$(cat '/proc/sys/kernel/random/uuid')"
@@ -368,6 +375,40 @@ EOF
 }
 
 vlessConfig() {
+    cat > $CONFIG_FILE<<-EOF
+{
+  "inbounds": [{
+    "port": $PORT,
+    "protocol": "vless",
+    "settings": {
+      "clients": [{
+          "id": "$UUID",
+          "level": 0
+      }],
+      "decryption": "none"
+    },
+    "streamSettings": {
+        "network": "tcp",
+        "tcpSettings": {
+          "header": {
+            "type": "none"
+            }
+         }
+      }
+  }],
+  "outbounds": [{
+    "protocol": "freedom",
+    "settings": {}
+  },{
+    "protocol": "blackhole",
+    "settings": {},
+    "tag": "blocked"
+  }]
+}
+EOF
+}
+
+vlesstlsConfig() {
     cat > $CONFIG_FILE<<-EOF
 {
   "inbounds": [{
@@ -490,7 +531,11 @@ configXray() {
 	if   [[ "$VMESS" = "true" ]]; then
 		vmessConfig
 	elif [[ "$VLESS" = "true" ]]; then
-		vlessConfig
+		if [[ "$TLS" = "true" ]]; then
+			vlesstlsConfig
+		else
+			vlessConfig
+		fi
 	elif [[ "$TROJAN" = "true" ]]; then
 		trojanConfig
 	elif [[ "$SS" = "true" ]]; then
@@ -646,6 +691,14 @@ outputVless() {
 	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
 	echo -e "   ${BLUE}id(uuid)：${PLAIN} ${RED}${uuid}${PLAIN}"
 	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}"
+}
+
+outputVlesstls() {
+	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
+	echo -e "   ${BLUE}IP(address): ${PLAIN} ${RED}${IP}${PLAIN}"
+	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
+	echo -e "   ${BLUE}id(uuid)：${PLAIN} ${RED}${uuid}${PLAIN}"
+	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}"
 	echo -e "   ${BLUE}加密协议(security)：${PLAIN} ${RED}${security}${PLAIN}"
 	echo -e "   ${BLUE}域名(domain)：${PLAIN} ${RED}${domain}${PLAIN}"
 	echo -e "   ${BLUE}证书路径(cert)：${PLAIN} ${RED}${cert}${PLAIN}"
@@ -694,7 +747,11 @@ showInfo() {
 	if   [[ "$protocol" = vmess ]]; then
 		outputVmess
 	elif [[ "$protocol" = vless ]]; then
-		outputVless
+		if [[ "$security" = "tls" ]]; then
+			outputVlesstls
+		else
+			outputVless
+		fi
 	elif [[ "$protocol" = trojan ]]; then
 		outputTrojan
 	elif [[ "$protocol" = shadowsocks ]]; then
