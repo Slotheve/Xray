@@ -268,7 +268,7 @@ getData() {
 		[[ -z "$UUID" ]] && UUID="$(cat '/proc/sys/kernel/random/uuid')"
 		colorEcho $BLUE " UUID：$UUID"
 		echo ""
-		read -p " 是否需要tls(包括不验证tls)？[y/n]：" answer
+		read -p " 是否需要tls(包括跳过验证tls)？[y/n]：" answer
 		if [[ "${answer,,}" = "y" ]]; then
 			TLS="true"
 			colorEcho $BLUE " 已开启 TLS"
