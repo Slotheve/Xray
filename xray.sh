@@ -271,6 +271,7 @@ getData() {
 		read -p " 是否需要tls(包括不验证tls)？[y/n]：" answer
 		if [[ "${answer,,}" = "y" ]]; then
 			TLS="true"
+			colorEcho $BLUE " 已开启 TLS"
 			echo ""
 			read -p " 请设置vless域名（不输则随机生成）:" DOMAIN
 			[[ -z "$DOMAIN" ]] && DOMAIN=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1`.xyz
