@@ -735,8 +735,7 @@ outputVmess() {
 	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
 	echo -e "   ${BLUE}id(uuid)：${PLAIN} ${RED}${uuid}${PLAIN}"
 	echo -e "   ${BLUE}额外id(alterid)：${PLAIN} ${RED}${alterid}${PLAIN}"
-	echo -e "   ${BLUE}加密方式(security)：${PLAIN} ${RED}none${PLAIN}"
-	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}tcp${PLAIN}" 
+	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
 }
 
 outputVless() {
