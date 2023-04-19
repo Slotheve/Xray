@@ -371,7 +371,10 @@ vmessConfig() {
           "id": "$UUID",
           "level": 1,
           "alterId": $alterid
-         }]
+		}]
+	},
+	"streamSettings": {
+		"network": "tcp"
 	  }
   }],
   "outbounds": [{
