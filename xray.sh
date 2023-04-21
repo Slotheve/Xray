@@ -481,7 +481,10 @@ trojanConfig() {
          "password": "$PASSWORD",
          "flow": ""
        }],
-       "fallbacks": []
+      "fallbacks": [],
+      "mux": {
+          "enabled": true
+	}
      },
      "streamSettings": {
        "network": "tcp",
