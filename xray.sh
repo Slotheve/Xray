@@ -270,10 +270,10 @@ getData() {
 		[[ -z "$UUID" ]] && UUID="$(cat '/proc/sys/kernel/random/uuid')"
 		colorEcho $BLUE " UUID：$UUID"
 		echo ""
-		read -p " 是否需要tls(包括跳过验证tls)？[y/n]：" answer
+		read -p " 是否需要tls(默认取消)？[y/n]：" answer
 		if [[ "${answer,,}" = "y" ]]; then
 			TLS="true"
-			colorEcho $BLUE " 已开启 TLS"
+			colorEcho $BLUE " tls已取消"
 			echo ""
 			read -p " 请设置vless域名（不输则随机生成）:" DOMAIN
 			[[ -z "$DOMAIN" ]] && DOMAIN=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1`.xyz
