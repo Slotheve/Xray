@@ -403,6 +403,9 @@ vlessConfig() {
           "level": 0
       }],
       "decryption": "none"
+      "mux": {
+          "enabled": true
+	}
     },
     "streamSettings": {
         "network": "tcp",
@@ -438,6 +441,9 @@ vlesstlsConfig() {
       }],
       "decryption": "none",
       "fallbacks": []
+      "mux": {
+          "enabled": true
+	}
     },
     "streamSettings": {
         "network": "tcp",
