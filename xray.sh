@@ -402,7 +402,7 @@ vlessConfig() {
           "id": "$UUID",
           "level": 0
       }],
-      "decryption": "none"
+      "decryption": "none",
       "mux": {
           "enabled": true
 	}
@@ -440,7 +440,7 @@ vlesstlsConfig() {
           "level": 0
       }],
       "decryption": "none",
-      "fallbacks": []
+      "fallbacks": [],
       "mux": {
           "enabled": true
 	}
