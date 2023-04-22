@@ -821,7 +821,7 @@ outputTrojan() {
 }
 
 outputSS() {
-	raw="${method}:${password}=@$IP:${port}"
+	raw="${method}:${password}@$IP:${port}"
 
 	link="ss://${raw}"
 
@@ -836,7 +836,7 @@ outputSS() {
 }
 
 outputSocks() {
-	raw="${username}:${password}=@$IP:${port}"
+	raw="${username}:${password}@$IP:${port}"
 
 	link="socks://${raw}"
 
