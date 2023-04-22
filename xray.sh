@@ -765,7 +765,7 @@ outputVmess() {
 	echo -e "   ${BLUE}额外id(alterid)：${PLAIN} ${RED}${alterid}${PLAIN}"
 	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}"
 	echo ""
-    echo -e "   ${BLUE}vmess链接:${PLAIN} $RED$link$PLAIN"
+	echo -e "   ${BLUE}vmess链接:${PLAIN} $RED$link$PLAIN"
 }
 
 outputVless() {
@@ -779,7 +779,7 @@ outputVless() {
 	echo -e "   ${BLUE}id(uuid)：${PLAIN} ${RED}${uuid}${PLAIN}"
 	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}"
 	echo ""
-    echo -e "   ${BLUE}vless链接:${PLAIN} $RED$link$PLAIN"
+	echo -e "   ${BLUE}vless链接:${PLAIN} $RED$link$PLAIN"
 }
 
 outputVlesstls() {
@@ -797,8 +797,7 @@ outputVlesstls() {
 	echo -e "   ${BLUE}证书路径(cert)：${PLAIN} ${RED}${cert}${PLAIN}"
 	echo -e "   ${BLUE}密钥路径(key)：${PLAIN} ${RED}${key}${PLAIN}"
 	echo ""
-    echo -e "   ${BLUE}vless链接:${PLAIN} $RED$link$PLAIN"
-	echo ""
+	echo -e "   ${BLUE}vless链接:${PLAIN} $RED$link$PLAIN"
 	echo -e "   ${BLUE}非自定义证书路径请务必开启:${PLAIN} ${RED}skip-cert-verify: true${PLAIN}"
 }
 
@@ -817,8 +816,7 @@ outputTrojan() {
 	echo -e "   ${BLUE}证书路径(cert)：${PLAIN} ${RED}${cert}${PLAIN}"
 	echo -e "   ${BLUE}密钥路径(key)：${PLAIN} ${RED}${key}${PLAIN}"
 	echo ""
-    echo -e "   ${BLUE}trojan链接:${PLAIN} $RED$link$PLAIN"
-	echo ""
+	echo -e "   ${BLUE}trojan链接:${PLAIN} $RED$link$PLAIN"
 	echo -e "   ${BLUE}非自定义证书路径请务必开启:${PLAIN} ${RED}skip-cert-verify: true${PLAIN}"
 }
 
@@ -834,7 +832,7 @@ outputSS() {
 	echo -e "   ${BLUE}加密协议(method)：${PLAIN} ${RED}${method}${PLAIN}"
 	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
 	echo ""
-    echo -e "   ${BLUE}ss链接:${PLAIN} $RED$link$PLAIN"
+	echo -e "   ${BLUE}ss链接:${PLAIN} $RED$link$PLAIN"
 }
 
 outputSocks() {
@@ -848,7 +846,7 @@ outputSocks() {
 	echo -e "   ${BLUE}用户名(username)：${PLAIN} ${RED}${username}${PLAIN}"
 	echo -e "   ${BLUE}密码(password)：${PLAIN} ${RED}${password}${PLAIN}"
 	echo ""
-    echo -e "   ${BLUE}socks链接:${PLAIN} $RED$link$PLAIN"
+	echo -e "   ${BLUE}socks链接:${PLAIN} $RED$link$PLAIN"
 }
 
 showInfo() {
