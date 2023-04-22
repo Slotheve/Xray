@@ -741,12 +741,31 @@ getConfigFileInfo() {
 }
 
 outputVmess() {
+	raw="{
+	\"v\":\"2\",
+	\"ps\":\"\",
+	\"add\":\"$IP\",
+	\"port\":\"${port}\",
+	\"id\":\"${uuid}\",
+	\"aid\":\"$alterid\",
+	\"net\":\"tcp\",
+	\"type\":\"none\",
+	\"host\":\"\",
+	\"path\":\"\",
+	\"tls\":\"\"
+	}"
+
+	link=`echo -n ${raw} | base64 -w 0`
+	link="vmess://${link}"
+
 	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
 	echo -e "   ${BLUE}IP(address): ${PLAIN} ${RED}${IP}${PLAIN}"
 	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
 	echo -e "   ${BLUE}id(uuid)：${PLAIN} ${RED}${uuid}${PLAIN}"
 	echo -e "   ${BLUE}额外id(alterid)：${PLAIN} ${RED}${alterid}${PLAIN}"
-	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
+	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}"
+	echo ""
+    echo -e "   ${BLUE}vmess链接:${PLAIN} $RED$link$PLAIN"
 }
 
 outputVless() {
