@@ -823,7 +823,8 @@ outputTrojan() {
 outputSS() {
 	raw="${method}:${password}@$IP:${port}"
 
-	link="ss://${raw}"
+        link=`echo -n ${raw} | base64 -w 0`
+	link="ss://${link}"
 
 	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
 	echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
