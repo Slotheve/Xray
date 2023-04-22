@@ -837,17 +837,11 @@ outputSS() {
 }
 
 outputSocks() {
-	raw="${username}:${password}@$IP:${port}"
-
-	link="socks://${raw}"
-
 	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
 	echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
 	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
 	echo -e "   ${BLUE}用户名(username)：${PLAIN} ${RED}${username}${PLAIN}"
 	echo -e "   ${BLUE}密码(password)：${PLAIN} ${RED}${password}${PLAIN}"
-	echo ""
-	echo -e "   ${BLUE}socks链接:${PLAIN} $RED$link$PLAIN"
 }
 
 showInfo() {
