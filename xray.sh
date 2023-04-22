@@ -769,14 +769,24 @@ outputVmess() {
 }
 
 outputVless() {
+	raw="${uuid}@$IP:${port}?encryption=none&type=tcp"
+
+	link="vless://${raw}"
+
 	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
 	echo -e "   ${BLUE}IP(address): ${PLAIN} ${RED}${IP}${PLAIN}"
 	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
 	echo -e "   ${BLUE}id(uuid)：${PLAIN} ${RED}${uuid}${PLAIN}"
 	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}"
+	echo ""
+    echo -e "   ${BLUE}vless链接:${PLAIN} $RED$link$PLAIN"
 }
 
 outputVlesstls() {
+	raw="${uuid}@$IP:${port}?encryption=none&type=tcp&security=tls&sni=$domain&headerType=none"
+
+	link="vless://${raw}"
+
 	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
 	echo -e "   ${BLUE}IP(address): ${PLAIN} ${RED}${IP}${PLAIN}"
 	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
@@ -787,10 +797,16 @@ outputVlesstls() {
 	echo -e "   ${BLUE}证书路径(cert)：${PLAIN} ${RED}${cert}${PLAIN}"
 	echo -e "   ${BLUE}密钥路径(key)：${PLAIN} ${RED}${key}${PLAIN}"
 	echo ""
-	echo -e "   ${RED}非自定义证书路径请务必开启: skip-cert-verify: true${PLAIN}"
+    echo -e "   ${BLUE}vless链接:${PLAIN} $RED$link$PLAIN"
+	echo ""
+	echo -e "   ${BLUE}非自定义证书路径请务必开启:${PLAIN} ${RED}skip-cert-verify: true${PLAIN}"
 }
 
 outputTrojan() {
+	raw="${password}@$IP:${port}?type=tcp&security=tls&sni=$domain&headerType=none"
+
+	link="trojan://${raw}"
+
 	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
 	echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
 	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
@@ -801,24 +817,38 @@ outputTrojan() {
 	echo -e "   ${BLUE}证书路径(cert)：${PLAIN} ${RED}${cert}${PLAIN}"
 	echo -e "   ${BLUE}密钥路径(key)：${PLAIN} ${RED}${key}${PLAIN}"
 	echo ""
-	echo -e "   ${RED}非自定义证书路径请务必开启: skip-cert-verify: true${PLAIN}"
+    echo -e "   ${BLUE}trojan链接:${PLAIN} $RED$link$PLAIN"
+	echo ""
+	echo -e "   ${BLUE}非自定义证书路径请务必开启:${PLAIN} ${RED}skip-cert-verify: true${PLAIN}"
 }
 
 outputSS() {
+	raw="${method}:${password}=@$IP:${port}"
+
+	link="ss://${raw}"
+
 	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
 	echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
 	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
 	echo -e "   ${BLUE}密码(password)：${PLAIN} ${RED}${password}${PLAIN}"
 	echo -e "   ${BLUE}加密协议(method)：${PLAIN} ${RED}${method}${PLAIN}"
 	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}" 
+	echo ""
+    echo -e "   ${BLUE}ss链接:${PLAIN} $RED$link$PLAIN"
 }
 
 outputSocks() {
+	raw="${username}:${password}=@$IP:${port}"
+
+	link="socks://${raw}"
+
 	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
 	echo -e "   ${BLUE}IP/域名(address): ${PLAIN} ${RED}${IP}${PLAIN}"
 	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
 	echo -e "   ${BLUE}用户名(username)：${PLAIN} ${RED}${username}${PLAIN}"
 	echo -e "   ${BLUE}密码(password)：${PLAIN} ${RED}${password}${PLAIN}"
+	echo ""
+    echo -e "   ${BLUE}socks链接:${PLAIN} $RED$link$PLAIN"
 }
 
 showInfo() {
