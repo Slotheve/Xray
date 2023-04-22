@@ -215,7 +215,7 @@ selectciphers() {
 		hint="${ciphers[$i-1]}"
 		echo -e "${green}${i}${plain}) ${hint}"
 	done
-	read -p "Which cipher you'd select(Default: ${ciphers[0]}):" pick
+	read -p "你选择什么加密方式(默认: ${ciphers[0]}):" pick
 	[ -z "$pick" ] && pick=1
 	expr ${pick} + 1 &>/dev/null
 	if [ $? -ne 0 ]; then
