@@ -905,13 +905,14 @@ menu() {
 	echo -e "  ${GREEN}5.${PLAIN}  安装Socks ${GREEN}(原生udp)${PLAIN} ${RED}不推荐${PLAIN}"
 	echo " -------------"
 	echo -e "  ${GREEN}6.${PLAIN}  更新Xray"
-	echo -e "  ${GREEN}7.${RED}  卸载Xray${PLAIN}"
+	echo -e "  ${GREEN}7.${PLAIN}  ${RED}卸载Xray${PLAIN}"
 	echo " -------------"
-	echo -e "  ${GREEN}8.${PLAIN}  重启Xray"
-	echo -e "  ${GREEN}9.${PLAIN}  停止Xray"
+	echo -e "  ${GREEN}8.${PLAIN}  启动Xray"
+	echo -e "  ${GREEN}9.${PLAIN}  重启Xray"
+	echo -e "  ${GREEN}10.${PLAIN}  停止Xray"
 	echo " -------------"
-	echo -e "  ${GREEN}10.${PLAIN}  查看Xray配置"
-	echo -e "  ${GREEN}11.${PLAIN}  查看Xray日志"
+	echo -e "  ${GREEN}11.${PLAIN}  查看Xray配置"
+	echo -e "  ${GREEN}12.${PLAIN}  查看Xray日志"
 	echo " -------------"
 	echo -e "  ${GREEN}0.${PLAIN}  退出"
 	echo -n " 当前状态："
@@ -950,15 +951,18 @@ menu() {
 			uninstall
 			;;
 		8)
-			restart
+			start
 			;;
 		9)
-			stop
+			restart
 			;;
 		10)
-			showInfo
+			stop
 			;;
 		11)
+			showInfo
+			;;
+		12)
 			showLog
 			;;
 		*)
