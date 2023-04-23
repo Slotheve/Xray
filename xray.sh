@@ -798,7 +798,7 @@ outputVlesstls() {
 	echo -e "   ${BLUE}密钥路径(key)：${PLAIN} ${RED}${key}${PLAIN}"
 	echo ""
 	echo -e "   ${BLUE}vless链接:${PLAIN} $RED$link$PLAIN"
-	echo -e "   ${BLUE}非自定义证书路径请务必开启:${PLAIN} ${RED}skip-cert-verify: true${PLAIN}"
+	echo -e "   ${BLUE}非自定义证书路径请务必开启:${PLAIN} ${RED}skip-cert-verify: true${PLAIN} ${BLUE}(允许不安全连接)${PLAIN}"
 }
 
 outputTrojan() {
@@ -817,7 +817,7 @@ outputTrojan() {
 	echo -e "   ${BLUE}密钥路径(key)：${PLAIN} ${RED}${key}${PLAIN}"
 	echo ""
 	echo -e "   ${BLUE}trojan链接:${PLAIN} $RED$link$PLAIN"
-	echo -e "   ${BLUE}非自定义证书路径请务必开启:${PLAIN} ${RED}skip-cert-verify: true${PLAIN}"
+	echo -e "   ${BLUE}非自定义证书路径请务必开启:${PLAIN} ${RED}skip-cert-verify: true${PLAIN} ${BLUE}(允许不安全连接)${PLAIN}"
 }
 
 outputSS() {
