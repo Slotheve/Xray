@@ -903,17 +903,17 @@ menu() {
 	echo -e "  ${GREEN}3.${PLAIN}  安装Trojan ${GREEN}(udp over tcp)${PLAIN}"
 	echo -e "  ${GREEN}4.${PLAIN}  安装Shadowsocks ${GREEN}(原生udp)${PLAIN}"
 	echo -e "  ${GREEN}5.${PLAIN}  安装Socks ${GREEN}(原生udp)${PLAIN} ${RED}不推荐${PLAIN}"
-	echo -e "  ${GREEN}7.${PLAIN}  ${YELLOW}安装Snell${PLAIN}${GREEN}(udp over tcp)${PLAIN}${GREEN}(仅v3)${PLAIN}"
+	echo -e "  ${GREEN}6.${PLAIN}  ${YELLOW}安装Snell ${PLAIN}${GREEN}(udp over tcp) ${PLAIN}${RED}(仅v3)${PLAIN}"
 	echo " -------------"
-	echo -e "  ${GREEN}6.${PLAIN}  更新Xray"
-	echo -e "  ${GREEN}7.${PLAIN}  ${RED}卸载Xray${PLAIN}"
+	echo -e "  ${GREEN}7.${PLAIN}  更新Xray"
+	echo -e "  ${GREEN}8.${PLAIN}  ${RED}卸载Xray${PLAIN}"
 	echo " -------------"
-	echo -e "  ${GREEN}8.${PLAIN}  启动Xray"
-	echo -e "  ${GREEN}9.${PLAIN}  重启Xray"
-	echo -e "  ${GREEN}10.${PLAIN} 停止Xray"
+	echo -e "  ${GREEN}9.${PLAIN}  启动Xray"
+	echo -e "  ${GREEN}10.${PLAIN} 重启Xray"
+	echo -e "  ${GREEN}11.${PLAIN} 停止Xray"
 	echo " -------------"
-	echo -e "  ${GREEN}11.${PLAIN} 查看Xray配置"
-	echo -e "  ${GREEN}12.${PLAIN} 查看Xray日志"
+	echo -e "  ${GREEN}12.${PLAIN} 查看Xray配置"
+	echo -e "  ${GREEN}13.${PLAIN} 查看Xray日志"
 	echo " -------------"
 	echo -e "  ${GREEN}0.${PLAIN}  退出"
 	echo -n " 当前状态："
@@ -946,24 +946,27 @@ menu() {
 			install
 			;;
 		6)
-			update
+			bash <(curl -fsSL https://raw.githubusercontent.com/Slotheve/Snell-v3/main/snell.sh)
 			;;
 		7)
-			uninstall
+			update
 			;;
 		8)
-			start
+			uninstall
 			;;
 		9)
-			restart
+			start
 			;;
 		10)
-			stop
+			restart
 			;;
 		11)
-			showInfo
+			stop
 			;;
 		12)
+			showInfo
+			;;
+		13)
 			showLog
 			;;
 		*)
