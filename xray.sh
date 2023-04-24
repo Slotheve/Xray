@@ -903,6 +903,7 @@ menu() {
 	echo -e "  ${GREEN}3.${PLAIN}  安装Trojan ${GREEN}(udp over tcp)${PLAIN}"
 	echo -e "  ${GREEN}4.${PLAIN}  安装Shadowsocks ${GREEN}(原生udp)${PLAIN}"
 	echo -e "  ${GREEN}5.${PLAIN}  安装Socks ${GREEN}(原生udp)${PLAIN} ${RED}不推荐${PLAIN}"
+	echo -e "  ${GREEN}7.${PLAIN}  ${YELLOW}安装Snell${PLAIN}${GREEN}(udp over tcp)${PLAIN}${GREEN}(仅v3)${PLAIN}"
 	echo " -------------"
 	echo -e "  ${GREEN}6.${PLAIN}  更新Xray"
 	echo -e "  ${GREEN}7.${PLAIN}  ${RED}卸载Xray${PLAIN}"
