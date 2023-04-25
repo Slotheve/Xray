@@ -22,16 +22,9 @@ SOCKS="false"
 
 ciphers=(
 aes-256-gcm
-aes-192-gcm
-aes-128-gcm
-aes-256-ctr
-aes-192-ctr
-aes-128-ctr
-aes-256-cfb
-aes-192-cfb
-aes-128-cfb
-xchacha20-ietf-poly1305
+2022-blake3-aes-256-gcm
 chacha20-ietf-poly1305
+2022-blake3-chacha20-poly1305
 )
 
 checkSystem() {
@@ -259,11 +252,18 @@ getData() {
 		&& chmod +x /usr/local/etc/xray/xray.crt && CERT="/usr/local/etc/xray/xray.crt"
 		colorEcho $BLUE " 证书路径：$CERT"
 	elif [[ "$SS" = "true" ]]; then
-		echo ""
-		read -p " 请设置ss密码（不输则随机生成）:" PASSWORD
-		[[ -z "$PASSWORD" ]] && PASSWORD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
-		colorEcho $BLUE " 密码：$PASSWORD"
-		selectciphers
+	    selectciphers
+		if [[ "$METHOD" = "2022-blake3-aes-256-gcm" || "$METHOD" = "2022-blake3-chacha20-poly1305" ]]; then
+			echo ""
+			read -p " 请设置ss2022密钥（不会设置请默认生成）:" PASSWORD
+			[[ -z "$PASSWORD" ]] && PASSWORD=`openssl rand -base64 32`
+			colorEcho $BLUE " 密码：$PASSWORD"
+		else
+			echo ""
+			read -p " 请设置ss密码（不输则随机生成）:" PASSWORD
+			[[ -z "$PASSWORD" ]] && PASSWORD=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 16 | head -n 1`
+			colorEcho $BLUE " 密码：$PASSWORD"
+		fi
 	elif [[ "$VLESS" = "true" ]]; then
 		echo ""
 		read -p " 请设置vless的UUID（不输则随机生成）:" UUID
@@ -901,7 +901,7 @@ menu() {
 	echo -e "  ${GREEN}1.${PLAIN}  安装vmess ${GREEN}(udp over tcp)${PLAIN}"
 	echo -e "  ${GREEN}2.${PLAIN}  安装vless ${GREEN}(udp over tcp)${PLAIN}"
 	echo -e "  ${GREEN}3.${PLAIN}  安装Trojan ${GREEN}(udp over tcp)${PLAIN}"
-	echo -e "  ${GREEN}4.${PLAIN}  安装Shadowsocks ${GREEN}(原生udp)${PLAIN}"
+	echo -e "  ${GREEN}4.${PLAIN}  安装Shadowsocks ${GREEN}(原生udp/uot)${PLAIN}"
 	echo -e "  ${GREEN}5.${PLAIN}  安装Socks ${GREEN}(原生udp)${PLAIN} ${RED}不推荐${PLAIN}"
 	echo -e "  ${GREEN}6.${PLAIN}  ${YELLOW}切换Snell脚本 ${PLAIN}${GREEN}(udp over tcp) ${PLAIN}${RED}(仅v3)${PLAIN}"
 	echo " -------------"
