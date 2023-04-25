@@ -946,7 +946,7 @@ menu() {
 			install
 			;;
 		6)
-			bash <(curl -fsSL https://raw.githubusercontent.com/Slotheve/Snell-v3/main/snell.sh)
+			bash <(curl -fsSL https://raw.githubusercontent.com/Slotheve/Snell/main/snell.sh)
 			;;
 		7)
 			update
