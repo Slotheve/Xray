@@ -102,7 +102,7 @@ statusText() {
             echo -e ${GREEN}已安装${PLAIN} ${RED}未运行${PLAIN}
             ;;
         3)
-            echo -e ${GREEN}已安装${PLAIN} ${GREEN}Xray正在运行${PLAIN}
+            echo -e ${GREEN}已安装${PLAIN} ${GREEN}正在运行${PLAIN}
             ;;
         *)
             echo -e ${RED}未安装${PLAIN}
