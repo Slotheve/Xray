@@ -269,31 +269,6 @@ getData() {
 		read -p " 请设置vless的UUID（不输则随机生成）:" UUID
 		[[ -z "$UUID" ]] && UUID="$(cat '/proc/sys/kernel/random/uuid')"
 		colorEcho $BLUE " UUID：$UUID"
-		echo ""
-		read -p " 是否需要tls(默认取消)？[y/n]：" answer
-		if [[ "${answer,,}" = "y" ]]; then
-			TLS="true"
-			colorEcho $BLUE " tls已取消"
-			echo ""
-			read -p " 请设置vless域名（不输则随机生成）:" DOMAIN
-			[[ -z "$DOMAIN" ]] && DOMAIN=`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1`.xyz
-			colorEcho $BLUE " 域名：$DOMAIN"
-			echo ""
-			read -p " 请设置域名证书（不输默认生成）:" KEY
-			[[ -z "$KEY" ]] && mkdir -pv /usr/local/etc/xray && openssl genrsa \
-			-out /usr/local/etc/xray/xray.key 2048 && chmod \
-			+x /usr/local/etc/xray/xray.key && KEY="/usr/local/etc/xray/xray.key"
-			colorEcho $BLUE " 密钥路径：$KEY"
-			echo ""
-			read -p " 请设置域名证书（不输默认生成）:" CERT
-			[[ -z "$CERT" ]] && openssl req -new -x509 -days 3650 -key /usr/local/etc/xray/xray.key \
-			-out /usr/local/etc/xray/xray.crt -subj "/C=US/ST=LA/L=LAX/O=Xray/OU=Trojan/CN=&DOMAIN" \
-			&& chmod +x /usr/local/etc/xray/xray.crt && CERT="/usr/local/etc/xray/xray.crt"
-			colorEcho $BLUE " 证书路径：$CERT"
-		else
-			TLS="false"
-			colorEcho $BLUE " 已关闭 TLS"
-		fi
 	elif [[ "$SOCKS" = "true" ]]; then
 		echo ""
 		read -p " 请设置socks的用户名（不输则随机生成）:" USER
@@ -428,48 +403,6 @@ vlessConfig() {
 EOF
 }
 
-vlesstlsConfig() {
-    cat > $CONFIG_FILE<<-EOF
-{
-  "inbounds": [{
-    "port": $PORT,
-    "protocol": "vless",
-    "settings": {
-      "clients": [{
-          "id": "$UUID",
-          "level": 0
-      }],
-      "decryption": "none",
-      "fallbacks": [],
-      "mux": {
-          "enabled": true
-	}
-    },
-    "streamSettings": {
-        "network": "tcp",
-        "security": "tls",
-        "tlsSettings": {
-            "serverName": "$DOMAIN",
-            "alpn": ["http/1.1", "h2"],
-            "certificates": [{
-                    "certificateFile": "$CERT",
-                    "keyFile": "$KEY"
-            }]
-         }
-      }
-  }],
-  "outbounds": [{
-    "protocol": "freedom",
-    "settings": {}
-  },{
-    "protocol": "blackhole",
-    "settings": {},
-    "tag": "blocked"
-  }]
-}
-EOF
-}
-
 trojanConfig() {
     cat > $CONFIG_FILE<<-EOF
 {
@@ -587,12 +520,8 @@ configXray() {
 	mkdir -p /usr/local/xray
 	if   [[ "$VMESS" = "true" ]]; then
 		vmessConfig
-	elif [[ "$VLESS" = "true" ]]; then
-		if [[ "$TLS" = "true" ]]; then
-			vlesstlsConfig
-		else
-			vlessConfig
-		fi
+	elif [[ "$VLESS" = "true" ]]; then	
+		vlessConfig
 	elif [[ "$TROJAN" = "true" ]]; then
 		trojanConfig
 	elif [[ "$SS" = "true" ]]; then
@@ -782,25 +711,6 @@ outputVless() {
 	echo -e "   ${BLUE}vless链接:${PLAIN} $RED$link$PLAIN"
 }
 
-outputVlesstls() {
-	raw="${uuid}@$IP:${port}?encryption=none&type=tcp&security=tls&sni=$domain&headerType=none"
-
-	link="vless://${raw}"
-
-	echo -e "   ${BLUE}协议: ${PLAIN} ${RED}${protocol}${PLAIN}"
-	echo -e "   ${BLUE}IP(address): ${PLAIN} ${RED}${IP}${PLAIN}"
-	echo -e "   ${BLUE}端口(port)：${PLAIN} ${RED}${port}${PLAIN}"
-	echo -e "   ${BLUE}id(uuid)：${PLAIN} ${RED}${uuid}${PLAIN}"
-	echo -e "   ${BLUE}传输协议(network)：${PLAIN} ${RED}${network}${PLAIN}"
-	echo -e "   ${BLUE}加密协议(security)：${PLAIN} ${RED}${security}${PLAIN}"
-	echo -e "   ${BLUE}域名(domain)：${PLAIN} ${RED}${domain}${PLAIN}"
-	echo -e "   ${BLUE}证书路径(cert)：${PLAIN} ${RED}${cert}${PLAIN}"
-	echo -e "   ${BLUE}密钥路径(key)：${PLAIN} ${RED}${key}${PLAIN}"
-	echo ""
-	echo -e "   ${BLUE}vless链接:${PLAIN} $RED$link$PLAIN"
-	echo -e "   ${BLUE}非自定义证书路径请务必开启:${PLAIN} ${YELLOW}skip-cert-verify:${PLAIN} ${RED}true${PLAIN} ${YELLOW}(允许不安全连接)${PLAIN}"
-}
-
 outputTrojan() {
 	raw="${password}@$IP:${port}?type=tcp&security=tls&sni=$domain&headerType=none"
 
@@ -861,11 +771,7 @@ showInfo() {
 	if   [[ "$protocol" = vmess ]]; then
 		outputVmess
 	elif [[ "$protocol" = vless ]]; then
-		if [[ "$security" = "tls" ]]; then
-			outputVlesstls
-		else
-			outputVless
-		fi
+		outputVless
 	elif [[ "$protocol" = trojan ]]; then
 		outputTrojan
 	elif [[ "$protocol" = shadowsocks ]]; then
@@ -894,7 +800,7 @@ menu() {
 	echo -e "# ${GREEN}TG号${PLAIN}: https://t.me/slotheve                                   #"
 	echo "#################################################################"
 	echo -e "# ${RED}此脚本只为隧道或IPLC/IEPL中转而生,无任何伪装${PLAIN}                  #"
-	echo -e "# ${RED}Vless/Trojan的tls除非自定义证书路径,否则也是本地生成的无效证书${PLAIN}#"
+	echo -e "# ${RED}Trojan的tls除非自定义证书路径,否则也是本地生成的无效证书${PLAIN}#"
 	echo "#################################################################"
 	echo " -------------"
 	echo -e "  ${GREEN}1.${PLAIN}  安装vmess ${GREEN}(udp over tcp)${PLAIN}"
