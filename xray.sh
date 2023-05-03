@@ -216,7 +216,7 @@ selectciphers() {
 		continue
 	fi
 	if [[ "$pick" -lt 1 || "$pick" -gt ${#ciphers[@]} ]]; then
-		echo -e "[${RED}Error${PLAIN}] 请正确选择"
+		echo -e "${BLUE}[${PLAIN}${RED}Error${PLAIN}${BLUE}]${PLAIN} ${BLUE}请正确选择${PLAIN}"
 		exit 0
 	fi
 	METHOD=${ciphers[$pick-1]}
