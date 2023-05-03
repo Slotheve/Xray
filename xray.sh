@@ -216,8 +216,8 @@ selectciphers() {
 		continue
 	fi
 	if [[ "$pick" -lt 1 || "$pick" -gt ${#ciphers[@]} ]]; then
-		echo -e "[${red}Error${plain}] Please enter a number between 1 and ${#ciphers[@]}"
-		continue
+		echo -e "[${RED}Error${PLAIN}] 请正确选择"
+		exit 0
 	fi
 	METHOD=${ciphers[$pick-1]}
 }
