@@ -6,5 +6,5 @@
 
 ## 一键脚本
 ```yaml
-bash <(curl -fsSL https://raw.githubusercontent.com/Slotheve/Xray-proxy/main/xray.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/Slotheve/Xray/main/xray.sh)
 ```
