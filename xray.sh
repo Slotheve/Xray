@@ -808,7 +808,7 @@ menu() {
 	echo -e "  ${GREEN}3.${PLAIN}  安装Trojan ${GREEN}(udp over tcp)${PLAIN}"
 	echo -e "  ${GREEN}4.${PLAIN}  安装Shadowsocks ${GREEN}(原生udp/uot)${PLAIN}"
 	echo -e "  ${GREEN}5.${PLAIN}  安装Socks ${GREEN}(原生udp)${PLAIN} ${RED}不推荐${PLAIN}"
-	echo -e "  ${GREEN}6.${PLAIN}  ${YELLOW}切换Snell脚本 ${PLAIN}${GREEN}(udp over tcp) ${PLAIN}${RED}(仅v3)${PLAIN}"
+	echo -e "  ${GREEN}6.${PLAIN}  ${YELLOW}切换Snell脚本 ${PLAIN}${GREEN}(udp over tcp) ${PLAIN}${RED}(仅v3/v4)${PLAIN}"
 	echo " -------------"
 	echo -e "  ${GREEN}7.${PLAIN}  更新Xray"
 	echo -e "  ${GREEN}8.${PLAIN}  ${RED}卸载Xray${PLAIN}"
