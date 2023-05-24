@@ -220,6 +220,7 @@ selectciphers() {
 		exit 0
 	fi
 	METHOD=${ciphers[$pick-1]}
+	colorEcho $BLUE " 加密：${ciphers[$pick-1]}"
 }
 
 getData() {
