@@ -798,7 +798,7 @@ menu() {
 	echo -e "#                     ${RED}Xray一键安装脚本${PLAIN}                          #"
 	echo -e "# ${GREEN}作者${PLAIN}: 怠惰(Slotheve)                                          #"
 	echo -e "# ${GREEN}网址${PLAIN}: https://slotheve.com                                    #"
-	echo -e "# ${GREEN}TG号${PLAIN}: https://t.me/slotheve                                   #"
+	echo -e "# ${GREEN}频道${PLAIN}: https://t.me/SlothNews                                  #"
 	echo "#################################################################"
 	echo -e "# ${RED}此脚本只为隧道或IPLC/IEPL中转而生,无任何伪装${PLAIN}                  #"
 	echo -e "# ${RED}Trojan的tls除非自定义证书路径,否则也是本地生成的无效证书${PLAIN}#"
