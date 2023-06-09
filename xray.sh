@@ -801,7 +801,7 @@ menu() {
 	echo -e "# ${GREEN}频道${PLAIN}: https://t.me/SlothNews                                  #"
 	echo "#################################################################"
 	echo -e "# ${RED}此脚本只为隧道或IPLC/IEPL中转而生,无任何伪装${PLAIN}                  #"
-	echo -e "# ${RED}Trojan的tls除非自定义证书路径,否则也是本地生成的无效证书${PLAIN}#"
+	echo -e "# ${RED}Trojan的tls除非自定义证书路径,否则也是本地生成的无效证书${PLAIN}      #"
 	echo "#################################################################"
 	echo " -------------"
 	echo -e "  ${GREEN}1.${PLAIN}  安装vmess ${GREEN}(udp over tcp)${PLAIN}"
